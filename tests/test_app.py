@@ -1,8 +1,17 @@
 import sys
 import os
+import pytest
 
-# Add src to path (matches PDF)
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+# Fixture to set PYTHONPATH for all tests (fixes CI path issues)
+@pytest.fixture(autouse=True)
+def add_src_to_path():
+    # Get project root (where tests/ is)
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    # Add src to path
+    sys.path.insert(0, os.path.join(project_root, 'src'))
+    yield
+    # Clean up after test
+    sys.path.pop(0)
 
 from app import app
 
