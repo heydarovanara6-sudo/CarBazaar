@@ -22,40 +22,45 @@
     </header>
 
     <main class="details-page">
-        <div class="detail-grid">
-            <div class="detail-gallery">
-                <div class="main-image">
-                    <img id="mainImage" src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}" onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
-                </div>
-                {% if car.images|length > 1 %}
-                <div class="thumbs">
-                    {% for img in car.images %}
-                    <img class="thumb" data-src="{{ img }}" src="{{ img }}" alt="thumb" onerror="this.src='https://via.placeholder.com/120x90?text=No+Image'">
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="detail-card">
-                <div class="price-line">
-                    <div class="price-big">{{ car.price }} {{ car.currency }}</div>
-                    <div class="badges">
-                        <span class="badge">{{ car.year }}</span>
-                        <span class="badge">{{ car.city }}</span>
-                        <span class="badge soft">Views: —</span>
+        <div class="detail-shell">
+            <div class="detail-grid">
+                <div class="detail-gallery">
+                    <div class="main-image">
+                        <img id="mainImage" src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}" onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
                     </div>
+                    {% if car.images|length > 1 %}
+                    <div class="thumbs">
+                        {% for img in car.images %}
+                        <img class="thumb" data-src="{{ img }}" src="{{ img }}" alt="thumb" onerror="this.src='https://via.placeholder.com/120x90?text=No+Image'">
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
 
-                <div class="spec-grid">
-                    <div class="spec"><span>Engine</span><strong>{{ car.engine }} L</strong></div>
-                    <div class="spec"><span>Mileage</span><strong>{{ car.odometer }} km</strong></div>
-                    <div class="spec"><span>Posted</span><strong>{{ car.dates }}</strong></div>
-                    <div class="spec"><span>Currency</span><strong>{{ car.currency }}</strong></div>
-                </div>
+                <div class="detail-card">
+                    <div class="price-line">
+                        <div>
+                            <div class="price-big">{{ car.price }} {{ car.currency }}</div>
+                            <div class="subtitle">{{ car.brand }} • {{ car.model }}</div>
+                        </div>
+                        <div class="chips">
+                            <span class="chip">{{ car.year }}</span>
+                            <span class="chip">{{ car.city }}</span>
+                            <span class="chip soft">Views: —</span>
+                        </div>
+                    </div>
 
-                <div class="actions">
-                    <button class="btn full">Contact seller (demo)</button>
-                    <a class="btn ghost full" href="/">Back to listings</a>
+                    <div class="spec-grid">
+                        <div class="spec"><span>Engine</span><strong>{{ car.engine }} L</strong></div>
+                        <div class="spec"><span>Mileage</span><strong>{{ car.odometer }} km</strong></div>
+                        <div class="spec"><span>Posted</span><strong>{{ car.dates }}</strong></div>
+                        <div class="spec"><span>Currency</span><strong>{{ car.currency }}</strong></div>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn full">Contact seller (demo)</button>
+                        <a class="btn ghost full" href="/">Back to listings</a>
+                    </div>
                 </div>
             </div>
         </div>
