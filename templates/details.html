@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ car.brand }} {{ car.model }} - CarBazaar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='output.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="bg-gray-100">
+    <header class="bg-white shadow">/* same header as index */</header>
+
+    <main class="container mx-auto py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+                <img src="{{ car.images[0] }}" class="w-full rounded-lg shadow-lg" alt="">
+            </div>
+            <div class="bg-white p-8 rounded-lg shadow">
+                <h1 class="text-4xl font-bold mb-4">{{ car.brand }} {{ car.model }}</h1>
+                <div class="text-3xl font-bold text-red-600 mb-6">{{ car.price }} {{ car.currency }}</div>
+                <ul class="space-y-3 text-lg">
+                    <li><strong>Year:</strong> {{ car.year }}</li>
+                    <li><strong>Engine:</strong> {{ car.engine }}L</li>
+                    <li><strong>Mileage:</strong> {{ car.odometer }} km</li>
+                    <li><strong>City:</strong> {{ car.city }}</li>
+                    <li><strong>Posted:</strong> {{ car.dates }}</li>
+                </ul>
+                <button class="mt-8 bg-red-600 text-white py-4 px-8 rounded text-xl hover:bg-red-700">
+                    Contact Seller
+                </button>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

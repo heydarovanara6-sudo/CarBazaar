@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarBazaar - Buy & Sell Cars in Azerbaijan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='output.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"/>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-white shadow">
+        <div class="bg-gray-50 py-2 text-sm">
+            <div class="container mx-auto flex justify-between">
+                <ul class="flex gap-8">
+                    <li>Tap.az</li>
+                    <li>Bina.az</li>
+                    <li>Boss.az</li>
+                </ul>
+                <ul class="flex gap-8">
+                    <li>Support: (012) 526-47-47</li>
+                    <li>Help</li>
+                    <li>Az</li>
+                    <li><a href="/favourites"><i class="fa-solid fa-heart"></i> Favorites</a></li>
+                    <li><i class="fa-solid fa-user"></i> Login</li>
+                </ul>
+            </div>
+        </div>
+        <div class="bg-red-600 text-white py-4">
+            <div class="container mx-auto text-3xl font-bold">CarBazaar</div>
+        </div>
+    </header>
+
+    <main class="container mx-auto py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Filters -->
+            <aside class="bg-white p-6 rounded-lg shadow">
+                <h2 class="font-bold text-xl mb-4">Filters</h2>
+                <div class="space-y-4">
+                    <select id="brands" onchange="showModels()" class="w-full p-3 border rounded">
+                        <option value="">All Brands</option>
+                    </select>
+                    <select id="models" class="w-full p-3 border rounded">
+                        <option value="">All Models</option>
+                    </select>
+                    <input type="number" id="minPrice" placeholder="Min Price" class="w-full p-3 border rounded">
+                    <input type="number" id="maxPrice" placeholder="Max Price" class="w-full p-3 border rounded">
+                    <select id="minYear" class="w-full p-3 border rounded"><option value="">Min Year</option></select>
+                    <select id="maxYear" class="w-full p-3 border rounded"><option value="">Max Year</option></select>
+                    <button onclick="applyFilters()" class="w-full bg-red-600 text-white py-3 rounded hover:bg-red-700">
+                        Apply Filters
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Car Grid -->
+            <div id="showCards" class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for car in cars %}
+                <div class="bg-white rounded-lg shadow hover:shadow-xl transition relative">
+                    <i onclick="toggleFavorite('{{ car.id }}', this)" class="fa-heart absolute top-4 right-4 text-2xl cursor-pointer z-10 
+                        {% if car.id in favorites %}fa-solid text-red-600{% else %}fa-regular{% endif %}"></i>
+                    <a href="/details/{{ car.id }}">
+                        <img src="{{ car.images[0] }}" class="w-full h-56 object-cover rounded-t-lg" alt="{{ car.brand }} {{ car.model }}">
+                    </a>
+                    <div class="p-4">
+                        <div class="text-2xl font-bold">{{ car.price }} {{ car.currency }}</div>
+                        <div class="text-lg font-semibold uppercase">{{ car.brand }} {{ car.model }}</div>
+                        <div class="text-gray-600">{{ car.year }} • {{ car.engine }}L • {{ car.odometer }} km</div>
+                        <div class="text-sm text-gray-500 mt-2">{{ car.city }} • {{ car.dates }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        let favorites = JSON.parse(localStorage.getItem('carbazaar_favorites') || '[]');
+        function toggleFavorite(id, el) {
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(f => f !== id);
+                el.classList.replace('fa-solid', 'fa-regular');
+                el.classList.remove('text-red-600');
+            } else {
+                favorites.push(id);
+                el.classList.replace('fa-regular', 'fa-solid');
+                el.classList.add('text-red-600');
+            }
+            localStorage.setItem('carbazaar_favorites', JSON.stringify(favorites));
+        }
+    </script>
+</body>
+</html>
