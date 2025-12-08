@@ -5,14 +5,15 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../s
 
 from app import app
 
+
 def test_index_route():
     client = app.test_client()
     response = client.get('/')
     assert response.status_code == 200
-    assert response.data == b'Hello, World!'
+    assert b"CarBazaar" in response.data
 
-def test_greet_route():
+
+def test_details_not_found():
     client = app.test_client()
-    response = client.get('/greet/TestUser')
-    assert response.status_code == 200
-    assert b'Hello, TestUser!' in response.data
+    response = client.get('/details/does-not-exist')
+    assert response.status_code == 404
