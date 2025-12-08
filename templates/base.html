@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarBazaar - Buy & Sell Cars in Azerbaijan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+</head>
+
+<body>
+    <header>
+        <div class="topbar">
+            <div class="logo"><a href="{{ url_for('index') }}"
+                    style="color: inherit; text-decoration: none;">CarBazaar</a></div>
+            <nav>
+                {% if current_user.is_authenticated %}
+                <a href="#" id="sellBtn" class="nav-btn primary">Add your car</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="nav-btn primary">Add your car</a>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                <span style="margin-right: 15px; font-weight: 500;">Welcome, {{ current_user.username }}</span>
+                <a href="{{ url_for('my_ads') }}" class="nav-btn ghost">My Ads</a>
+                <a href="{{ url_for('logout') }}" class="nav-btn ghost">Logout</a>
+                {% else %}
+                <a href="{{ url_for('login') }}" class="nav-btn ghost">Login</a>
+                <a href="{{ url_for('register') }}" class="nav-btn ghost">Register</a>
+                {% endif %}
+            </nav>
+        </div>
+        <div class="hero">
+            <h1>CarBazaar</h1>
+            <p>Buy & Sell Cars in Azerbaijan</p>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Sell modal (frontend only) -->
+    <div class="modal" id="sellModal">
+        <div class="modal-content">
+            <button class="close" data-close="sellModal">&times;</button>
+            <h2>Add your car</h2>
+            <p class="muted">Demo only; backend not wired yet.</p>
+            <form id="sellForm" action="{{ url_for('add_car') }}" method="POST" enctype="multipart/form-data">
+                <div class="form-row">
+                    <label>Brand</label>
+                    <select name="brand" id="brandSelect" required>
+                        <option value="" disabled selected>Select Brand</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label>Model</label>
+                    <select name="model" id="modelSelect" required disabled>
+                        <option value="" disabled selected>Select Brand First</option>
+                    </select>
+                </div>
+                <div class="form-row two">
+                    <div>
+                        <label>Year</label>
+                        <input name="year" type="number" min="1950" max="2025" required>
+                    </div>
+                    <div>
+                        <label>Price</label>
+                        <input name="price" type="number" min="0" required>
+                    </div>
+                </div>
+                <div class="form-row two">
+                    <div>
+                        <label>Engine (L)</label>
+                        <input name="engine" type="number" step="0.1" min="0">
+                    </div>
+                    <div>
+                        <label>Mileage (km)</label>
+                        <input name="odometer" type="number" min="0">
+                    </div>
+                </div>
+                <div class="form-row two">
+                    <div>
+                        <label>City</label>
+                        <input name="city">
+                    </div>
+                    <div>
+                        <label>Currency</label>
+                        <select name="currency">
+                            <option>AZN</option>
+                            <option>USD</option>
+                            <option>EUR</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>Photos (First one will be used)</label>
+                    <input name="images" id="imageInput" type="file" accept="image/*">
+                    <div id="imagePreview" class="preview-grid"></div>
+                </div>
+                <button type="submit" class="btn full">Submit Listing</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

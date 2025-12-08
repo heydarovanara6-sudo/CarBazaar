@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="modal-content" style="max-width: 400px; margin: 50px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <h2>Register</h2>
+    <form method="POST" action="{{ url_for('register') }}">
+        <div class="form-row">
+            <label>Username</label>
+            <input name="username" type="text" required style="width: 100%; padding: 8px; margin-top: 4px;">
+        </div>
+        <div class="form-row">
+            <label>Email</label>
+            <input name="email" type="email" required style="width: 100%; padding: 8px; margin-top: 4px;">
+        </div>
+        <div class="form-row">
+            <label>Password</label>
+            <input name="password" type="password" required style="width: 100%; padding: 8px; margin-top: 4px;">
+        </div>
+        <button type="submit" class="btn full" style="margin-top: 15px;">Register</button>
+    </form>
+    <p style="text-align: center; margin-top: 10px;">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+</div>
+{% endblock %}

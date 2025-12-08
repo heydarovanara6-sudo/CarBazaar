@@ -1,171 +1,85 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CarBazaar - Buy & Sell Cars in Azerbaijan</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
-</head>
-<body>
-    <header>
-        <div class="topbar">
-            <div class="logo">CarBazaar</div>
-            <nav>
-                <a href="#" id="sellBtn" class="nav-btn primary">Add your car</a>
-                <a href="#" id="loginBtn" class="nav-btn ghost">Login</a>
-                <a href="#" id="registerBtn" class="nav-btn ghost">Register</a>
-            </nav>
-        </div>
-        <div class="hero">
-        <h1>CarBazaar</h1>
-        <p>Buy & Sell Cars in Azerbaijan</p>
-        </div>
-    </header>
+{% extends "base.html" %}
 
-    <main>
-        {% set brand_options = [] %}
-        {% for car in cars %}
-            {% if car.brand not in brand_options %}
-                {% set _ = brand_options.append(car.brand) %}
-            {% endif %}
-        {% endfor %}
+{% block content %}
+{% set brand_options = [] %}
+{% for car in cars %}
+{% if car.brand not in brand_options %}
+{% set _ = brand_options.append(car.brand) %}
+{% endif %}
+{% endfor %}
 
-        <section class="filters">
-            <div class="filter-group">
-                <label for="brandFilter">Brand</label>
-                <select id="brandFilter">
-                    <option value="">Any</option>
-                    {% for b in brand_options %}
-                    <option value="{{ b|lower }}">{{ b }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="priceMin">Price from</label>
-                <input id="priceMin" type="number" min="0" placeholder="0">
-            </div>
-            <div class="filter-group">
-                <label for="priceMax">Price to</label>
-                <input id="priceMax" type="number" min="0" placeholder="100000">
-            </div>
-            <div class="filter-group">
-                <label for="currencyFilter">Currency</label>
-                <select id="currencyFilter">
-                    <option value="">Any</option>
-                    <option value="AZN">AZN</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
-                </select>
-            </div>
-            <div class="filter-group">
-                <label for="cityFilter">City</label>
-                <input id="cityFilter" type="text" placeholder="e.g. Baku">
-            </div>
-            <div class="filter-actions">
-                <button id="applyFilters" class="btn small">Show listings</button>
-                <button id="resetFilters" class="btn small ghost">Reset</button>
-            </div>
-        </section>
-
-        <div class="grid" id="carGrid">
-            {% for car in cars %}
-            <div class="card"
-                 data-brand="{{ car.brand|lower }}"
-                 data-price="{{ car.price }}"
-                 data-city="{{ car.city|lower }}"
-                 data-currency="{{ car.currency }}">
-                <img src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
-                <div class="card-content">
-                    <div class="price">{{ car.price }} {{ car.currency }}</div>
-                    <div class="title">{{ car.brand }} {{ car.model }}</div>
-                    <div class="info">{{ car.year }} • {{ car.engine }}L • {{ car.odometer }} km</div>
-                    <div class="location">{{ car.city }} • {{ car.dates }}</div>
-                    <a href="/details/{{ car.id }}" class="btn">View Details</a>
-                </div>
-            </div>
+<section class="filters">
+    <div class="filter-group">
+        <label for="brandFilter">Brand</label>
+        <select id="brandFilter">
+            <option value="">Any</option>
+            {% for b in brand_options %}
+            <option value="{{ b|lower }}">{{ b }}</option>
             {% endfor %}
-        </div>
-    </main>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label for="priceMin">Price from</label>
+        <input id="priceMin" type="number" min="0" placeholder="0">
+    </div>
+    <div class="filter-group">
+        <label for="priceMax">Price to</label>
+        <input id="priceMax" type="number" min="0" placeholder="100000">
+    </div>
+    <div class="filter-group">
+        <label for="currencyFilter">Currency</label>
+        <select id="currencyFilter">
+            <option value="">Any</option>
+            <option value="AZN">AZN</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label for="cityFilter">City</label>
+        <input id="cityFilter" type="text" placeholder="e.g. Baku">
+    </div>
+    <div class="filter-actions">
+        <button id="applyFilters" class="btn small">Show listings</button>
+        <button id="resetFilters" class="btn small ghost">Reset</button>
+    </div>
+</section>
 
-    <!-- Sell modal (frontend only) -->
-    <div class="modal" id="sellModal">
-        <div class="modal-content">
-            <button class="close" data-close="sellModal">&times;</button>
-            <h2>Add your car</h2>
-            <p class="muted">Demo only; backend not wired yet.</p>
-            <form id="sellForm">
-                <div class="form-row">
-                    <label>Brand</label>
-                    <input name="brand" required>
-                </div>
-                <div class="form-row">
-                    <label>Model</label>
-                    <input name="model" required>
-                </div>
-                <div class="form-row two">
-                    <div>
-                        <label>Year</label>
-                        <input name="year" type="number" min="1950" max="2025" required>
-                    </div>
-                    <div>
-                        <label>Price</label>
-                        <input name="price" type="number" min="0" required>
-                    </div>
-                </div>
-                <div class="form-row two">
-                    <div>
-                        <label>Engine (L)</label>
-                        <input name="engine" type="number" step="0.1" min="0">
-                    </div>
-                    <div>
-                        <label>Mileage (km)</label>
-                        <input name="odometer" type="number" min="0">
-                    </div>
-                </div>
-                <div class="form-row two">
-                    <div>
-                        <label>City</label>
-                        <input name="city">
-                    </div>
-                    <div>
-                        <label>Currency</label>
-                        <select name="currency">
-                            <option>AZN</option>
-                            <option>USD</option>
-                            <option>EUR</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <label>Photos</label>
-                    <input name="images" id="imageInput" type="file" accept="image/*" multiple>
-                    <div id="imagePreview" class="preview-grid"></div>
-                </div>
-                <button type="submit" class="btn full">Submit (demo)</button>
-            </form>
+<div class="grid" id="carGrid">
+    {% for car in cars %}
+    <div class="card" data-brand="{{ car.brand|lower }}" data-price="{{ car.price }}" data-city="{{ car.city|lower }}"
+        data-currency="{{ car.currency }}">
+        <img src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}"
+            onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+        <div class="card-content">
+            <div class="price">{{ car.price }} {{ car.currency }}</div>
+            <div class="title">{{ car.brand }} {{ car.model }}</div>
+            <div class="info">{{ car.year }} • {{ car.engine }}L • {{ car.odometer }} km</div>
+            <div class="location">{{ car.city }} • {{ car.dates }}</div>
+            <div class="location" style="color: purple; margin-top: 4px;">Seller: {{ car.owner.username if car.owner
+                else 'Official' }}</div>
+            <a href="/details/{{ car.id }}" class="btn">View Details</a>
         </div>
     </div>
+    {% endfor %}
+</div>
 
-    <!-- Auth modal -->
-    <div class="modal" id="authModal">
-        <div class="modal-content">
-            <button class="close" data-close="authModal">&times;</button>
-            <h2 id="authTitle">Login</h2>
-            <form id="authForm">
-                <div class="form-row">
-                    <label>Email</label>
-                    <input name="email" type="email" required>
-                </div>
-                <div class="form-row">
-                    <label>Password</label>
-                    <input name="password" type="password" required>
-                </div>
-                <button type="submit" class="btn full" id="authSubmit">Login (demo)</button>
-            </form>
-        </div>
+<!-- Auth modal (Optional: Keep it if you still want a popup version, but we have dedicated pages now) -->
+<div class="modal" id="authModal">
+    <div class="modal-content">
+        <button class="close" data-close="authModal">&times;</button>
+        <h2 id="authTitle">Login</h2>
+        <form id="authForm">
+            <div class="form-row">
+                <label>Email</label>
+                <input name="email" type="email" required>
+            </div>
+            <div class="form-row">
+                <label>Password</label>
+                <input name="password" type="password" required>
+            </div>
+            <button type="submit" class="btn full" id="authSubmit">Login (demo)</button>
+        </form>
     </div>
-
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
-</body>
-</html>
+</div>
+{% endblock %}

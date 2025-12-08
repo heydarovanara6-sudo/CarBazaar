@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding: 20px 5%; max-width: 1200px; margin: 0 auto;">
+    <h2 style="margin-bottom: 20px;">My Ads</h2>
+
+    {% if cars %}
+    <div class="grid" id="carGrid">
+        {% for car in cars %}
+        <div class="card" data-brand="{{ car.brand|lower }}" data-price="{{ car.price }}"
+            data-city="{{ car.city|lower }}" data-currency="{{ car.currency }}">
+            <img src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}"
+                onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+            <div class="card-content">
+                <div class="price">{{ car.price }} {{ car.currency }}</div>
+                <div class="title">{{ car.brand }} {{ car.model }}</div>
+                <div class="info">{{ car.year }} • {{ car.engine }}L • {{ car.odometer }} km</div>
+                <div class="location">{{ car.city }} • {{ car.dates }}</div>
+                <a href="{{ url_for('details', id=car.id) }}" class="btn">View Details</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 50px; color: #666;">
+        <p>You haven't published any ads yet.</p>
+        <a href="#" onclick="document.getElementById('sellBtn').click(); return false;" class="btn primary">Add your
+            first car</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

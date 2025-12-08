@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="modal-content"
+    style="max-width: 400px; margin: 50px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <h2>Login</h2>
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    {% for message in messages %}
+    <div style="background: #fee; color: #c00; padding: 10px; margin-bottom: 10px; border-radius: 4px;">{{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('login') }}">
+        <div class="form-row">
+            <label>Username</label>
+            <input name="username" type="text" required style="width: 100%; padding: 8px; margin-top: 4px;">
+        </div>
+        <div class="form-row">
+            <label>Password</label>
+            <input name="password" type="password" required style="width: 100%; padding: 8px; margin-top: 4px;">
+        </div>
+        <button type="submit" class="btn full" style="margin-top: 15px;">Login</button>
+    </form>
+    <p style="text-align: center; margin-top: 10px;">Don't have an account? <a
+            href="{{ url_for('register') }}">Register</a></p>
+</div>
+{% endblock %}

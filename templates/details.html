@@ -1,76 +1,50 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ car.brand }} {{ car.model }} - CarBazaar</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-</head>
-
-<body>
-    <header class="hero-header">
-        <div class="topbar">
-            <div class="logo">CarBazaar</div>
-            <nav>
-                <a href="/" class="nav-btn ghost">Back</a>
-            </nav>
+{% block content %}
+<div class="detail-shell" style="margin-top: 20px;">
+    <div class="detail-grid">
+        <div class="detail-gallery">
+            <div class="main-image">
+                <img id="mainImage" src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}"
+                    onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
+            </div>
+            {% if car.images|length > 1 %}
+            <div class="thumbs">
+                {% for img in car.images %}
+                <img class="thumb" data-src="{{ img }}" src="{{ img }}" alt="thumb"
+                    onerror="this.src='https://via.placeholder.com/120x90?text=No+Image'">
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
-        <div class="hero hero-compact">
-            <h1>{{ car.brand }} {{ car.model }}</h1>
-            <p>Detailed view</p>
-        </div>
-    </header>
 
-    <main class="details-page">
-        <div class="detail-shell">
-            <div class="detail-grid">
-                <div class="detail-gallery">
-                    <div class="main-image">
-                        <img id="mainImage" src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}"
-                            onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
-                    </div>
-                    {% if car.images|length > 1 %}
-                    <div class="thumbs">
-                        {% for img in car.images %}
-                        <img class="thumb" data-src="{{ img }}" src="{{ img }}" alt="thumb"
-                            onerror="this.src='https://via.placeholder.com/120x90?text=No+Image'">
-                        {% endfor %}
-                    </div>
-                    {% endif %}
+        <div class="detail-card">
+            <div class="price-line">
+                <div>
+                    <div class="price-big">{{ car.price }} {{ car.currency }}</div>
+                    <div class="subtitle">{{ car.brand }} • {{ car.model }}</div>
                 </div>
-
-                <div class="detail-card">
-                    <div class="price-line">
-                        <div>
-                            <div class="price-big">{{ car.price }} {{ car.currency }}</div>
-                            <div class="subtitle">{{ car.brand }} • {{ car.model }}</div>
-                        </div>
-                        <div class="chips">
-                            <span class="chip">{{ car.year }}</span>
-                            <span class="chip">{{ car.city }}</span>
-                            <span class="chip soft">Views: —</span>
-                        </div>
-                    </div>
-
-                    <div class="spec-grid">
-                        <div class="spec"><span>Engine</span><strong>{{ car.engine }} L</strong></div>
-                        <div class="spec"><span>Mileage</span><strong>{{ car.odometer }} km</strong></div>
-                        <div class="spec"><span>Posted</span><strong>{{ car.dates }}</strong></div>
-                        <div class="spec"><span>Currency</span><strong>{{ car.currency }}</strong></div>
-                    </div>
-
-                    <div class="actions">
-                        <button class="btn full"><i class="fa-solid fa-phone"></i> Contact seller (demo)</button>
-                        <a class="btn ghost full" href="/"><i class="fa-solid fa-arrow-left"></i> Back</a>
-                    </div>
+                <div class="chips">
+                    <span class="chip">{{ car.year }}</span>
+                    <span class="chip">{{ car.city }}</span>
+                    <span class="chip soft">Views: —</span>
                 </div>
             </div>
+
+            <div class="spec-grid">
+                <div class="spec"><span>Engine</span><strong>{{ car.engine }} L</strong></div>
+                <div class="spec"><span>Mileage</span><strong>{{ car.odometer }} km</strong></div>
+                <div class="spec"><span>Posted</span><strong>{{ car.dates }}</strong></div>
+                <div class="spec"><span>Currency</span><strong>{{ car.currency }}</strong></div>
+                <div class="spec"><span>Seller</span><strong>{{ car.owner.username if car.owner else 'Official'
+                        }}</strong></div>
+            </div>
+
+            <div class="actions">
+                <button class="btn full"><i class="fa-solid fa-phone"></i> Contact seller (demo)</button>
+                <a class="btn ghost full" href="{{ url_for('index') }}"><i class="fa-solid fa-arrow-left"></i> Back</a>
+            </div>
         </div>
-    </main>
-
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
-</body>
-
-</html>
+    </div>
+</div>
+{% endblock %}

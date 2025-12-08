@@ -53,6 +53,31 @@ function handleImagePreview(evt) {
     });
 }
 
+// Car Data for Dropdowns
+const carData = {
+    "Acura": ["MDX", "RDX", "TLX", "ILX", "NSX"],
+    "Alfa Romeo": ["Giulia", "Stelvio", "Tonale"],
+    "Audi": ["A3", "A4", "A5", "A6", "A7", "A8", "Q3", "Q5", "Q7", "Q8", "e-tron", "RS6", "RS7", "R8"],
+    "BMW": ["1 Series", "2 Series", "3 Series", "4 Series", "5 Series", "7 Series", "8 Series", "X1", "X3", "X5", "X6", "X7", "M3", "M4", "M5", "iX", "i4"],
+    "Chevrolet": ["Cruze", "Malibu", "Camaro", "Corvette", "Tahoe", "Suburban", "Silverado", "Equinox", "Traverse"],
+    "Ford": ["Fiesta", "Focus", "Mustang", "Fusion", "Escape", "Explorer", "Expedition", "F-150", "Ranger", "Bronco"],
+    "Honda": ["Civic", "Accord", "CR-V", "Pilot", "HR-V", "Odyssey", "Ridgeline"],
+    "Hyundai": ["Elantra", "Sonata", "Tucson", "Santa Fe", "Palisade", "Kona", "Venue", "Ioniq"],
+    "Infiniti": ["Q50", "Q60", "QX50", "QX60", "QX80"],
+    "Kia": ["Rio", "Forte", "K5", "Stinger", "Soul", "Seltos", "Sportage", "Sorento", "Telluride", "Carnival"],
+    "Lada (VAZ)": ["Niva", "Priora", "Granta", "Vesta", "2107", "2106", "2101"],
+    "Land Rover": ["Range Rover", "Range Rover Sport", "Range Rover Velar", "Evoque", "Discovery", "Defender"],
+    "Lexus": ["IS", "ES", "LS", "NX", "RX", "GX", "LX", "LC"],
+    "Mazda": ["3", "6", "CX-30", "CX-5", "CX-50", "CX-9", "MX-5 Miata"],
+    "Mercedes-Benz": ["A-Class", "C-Class", "E-Class", "S-Class", "GLA", "GLB", "GLC", "GLE", "GLS", "G-Class", "CLA", "CLS", "AMG GT"],
+    "Mitsubishi": ["Lancer", "Outlander", "Pajero", "Eclipse Cross", "ASX"],
+    "Nissan": ["Sentra", "Altima", "Maxima", "Rogue", "Murano", "Pathfinder", "Patrol", "GT-R", "Z"],
+    "Porsche": ["911", "718 Cayman", "718 Boxster", "Panamera", "Macan", "Cayenne", "Taycan"],
+    "Toyota": ["Corolla", "Camry", "Avalon", "RAV4", "Highlander", "4Runner", "Land Cruiser", "Prado", "Tacoma", "Tundra", "Prius", "Supra", "Yaris"],
+    "Volkswagen": ["Golf", "Jetta", "Passat", "Tiguan", "Atlas", "Touareg", "ID.4"],
+    "Volvo": ["S60", "S90", "V60", "V90", "XC40", "XC60", "XC90"]
+};
+
 // Wire up events on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
     const applyBtn = document.getElementById('applyFilters');
@@ -71,17 +96,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const imageInput = document.getElementById('imageInput');
     imageInput?.addEventListener('change', handleImagePreview);
 
-    document.getElementById('sellForm')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        alert('Demo: form submission will be wired to backend later.');
-        closeModal('sellModal');
-    });
+    // Initialize Brand Dropdown
+    const brandSelect = document.getElementById('brandSelect');
+    const modelSelect = document.getElementById('modelSelect');
 
-    document.getElementById('authForm')?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        alert('Demo: auth will be wired to backend later.');
-        closeModal('authModal');
-    });
+    if (brandSelect && modelSelect) {
+        // Populate Brands
+        const sortedBrands = Object.keys(carData).sort();
+        sortedBrands.forEach(brand => {
+            const opt = document.createElement('option');
+            opt.value = brand;
+            opt.textContent = brand;
+            brandSelect.appendChild(opt);
+        });
+
+        // Handle Brand Change
+        brandSelect.addEventListener('change', () => {
+            const brand = brandSelect.value;
+            modelSelect.innerHTML = '<option value="" disabled selected>Select Model</option>';
+
+            if (brand && carData[brand]) {
+                carData[brand].sort().forEach(model => {
+                    const opt = document.createElement('option');
+                    opt.value = model;
+                    opt.textContent = model;
+                    modelSelect.appendChild(opt);
+                });
+                modelSelect.disabled = false;
+            } else {
+                modelSelect.disabled = true;
+            }
+        });
+    }
 
     // Detail page thumbnails: swap main image
     const mainImg = document.getElementById('mainImage');

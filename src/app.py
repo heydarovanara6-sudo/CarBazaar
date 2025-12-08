@@ -1,9 +1,80 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, flash
 import json
 import os
 import re
 import urllib.request
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 
+# Flask looks for static/ and templates/ in project root
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+# PROJECT_ROOT is the parent of src/ (i.e., /home/nargiz/CarBazaar)
+PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
+
+app = Flask(__name__, static_folder='../static', template_folder='../templates')
+app.secret_key = 'some_secret_key_for_session_management' # Change this in production!
+
+# Database Configuration
+# Use SQLite locally. For AlwaysData, change this URI to your MySQL connection string.
+# e.g., 'mysql+pymysql://user:password@host/dbname'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(PROJECT_ROOT, "users.db")}'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, '../static/uploads')
+
+# Ensure upload directory exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+# User Model
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    email = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    cars = db.relationship('Car', backref='owner', lazy=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+# Car Model
+from datetime import datetime
+class Car(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    brand = db.Column(db.String(50), nullable=False)
+    model = db.Column(db.String(50), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    price = db.Column(db.Integer, nullable=False)
+    currency = db.Column(db.String(3), default='AZN')
+    engine = db.Column(db.Float, default=0.0)
+    odometer = db.Column(db.Integer, default=0)
+    city = db.Column(db.String(50), default='Baku')
+    image_filename = db.Column(db.String(255)) # Store filename in static/uploads
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    @property
+    def images(self):
+        # Helper to return list of images (compatible with existing template logic)
+        if self.image_filename:
+            return [url_for('static', filename='uploads/' + self.image_filename)]
+        return ["https://via.placeholder.com/400x300?text=No+Image"]
+    
+    @property
+    def dates(self):
+        # Format date for display
+        return self.date_posted.strftime("%Y-%m-%d")
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 def safe_image(url: str, brand: str = "Unknown"):
     """
@@ -38,10 +109,6 @@ BRAND_IMAGE_MAP = {
     "Ferrari": "https://turbo.azstatic.com/uploads/f710x568/2022%2F12%2F28%2F15%2F40%2F48%2Fb18d5c9e-58d7-4e2e-9bba-1c29cbce9940%2F61425_r8Og48iy5Jr9GvOTtAnnyQ.jpg",
     "Acura": "https://turbo.azstatic.com/uploads/full/2023%2F01%2F31%2F13%2F41%2F14%2F30be4e7e-c9ac-455d-8616-616f096d6da7%2F71593_f9yNl7lW4FO-spgOift6dw.jpg",
 }
-
-# Flask looks for static/ and templates/ in project root
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-app = Flask(__name__, static_folder='../static', template_folder='../templates')
 
 
 def parse_price(raw: str):
@@ -158,14 +225,126 @@ def load_cars_from_hf(*args, **kwargs):
 # Load cars only from JS dataset
 CARS = load_cars_from_js() or []
 
+from werkzeug.utils import secure_filename
+import uuid
+
 @app.route("/")
 def index():
-    return render_template('index.html', cars=CARS)
+    # Fetch DB cars first
+    db_cars = Car.query.order_by(Car.date_posted.desc()).all()
+    # Merge with demo cars (demo cars come after? or before? Let's put DB cars first)
+    all_cars = list(db_cars) + list(CARS)
+    return render_template('index.html', cars=all_cars)
 
 @app.route("/details/<id>")
 def details(id):
-    car = next((c for c in CARS if c["id"] == id), None)
+    car = None
+    # Try finding in DB if id is numeric (DB uses integer IDs)
+    if id.isdigit():
+        car = Car.query.filter_by(id=int(id)).first()
+    
+    if not car:
+        # Fallback to demo cars (ids are strings like "5000")
+        car = next((c for c in CARS if str(c["id"]) == str(id)), None)
     return render_template('details.html', car=car) if car else ("Not found", 404)
 
+@app.route("/add_car", methods=["POST"])
+@login_required
+def add_car():
+    brand = request.form.get("brand")
+    model = request.form.get("model")
+    try:
+        year = int(request.form.get("year"))
+        price = int(request.form.get("price"))
+        engine = float(request.form.get("engine") or 0)
+        odometer = int(request.form.get("odometer") or 0)
+    except ValueError:
+        flash("Invalid numeric data")
+        return redirect(url_for('index'))
+
+    city = request.form.get("city")
+    currency = request.form.get("currency")
+    
+    # Handle Image
+    file = request.files.get('images')
+    filename = None
+    if file and file.filename:
+        ext = os.path.splitext(file.filename)[1]
+        # Use UUID to prevent filename collisions
+        unique_name = f"{uuid.uuid4().hex}{ext}"
+        filename = secure_filename(unique_name)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+    new_car = Car(
+        brand=brand,
+        model=model,
+        year=year,
+        price=price,
+        currency=currency,
+        engine=engine,
+        odometer=odometer,
+        city=city,
+        image_filename=filename,
+        owner=current_user
+    )
+    
+    db.session.add(new_car)
+    db.session.commit()
+    
+    flash("Car added successfully!")
+    return redirect(url_for('index'))
+
+@app.route("/my_ads")
+@login_required
+def my_ads():
+    # Fetch cars belonging to current user
+    user_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.date_posted.desc()).all()
+    return render_template('my_ads.html', cars=user_cars)
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form.get("username")
+        password = request.form.get("password")
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            flash("Invalid username or password")
+    return render_template('login.html')
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form.get("username")
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        # Check if user already exists
+        if User.query.filter_by(email=email).first() or User.query.filter_by(username=username).first():
+            flash("User already exists!")
+            return redirect(url_for('register'))
+
+        new_user = User(username=username, email=email)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        
+        login_user(new_user)
+        return redirect(url_for('index'))
+        
+    return render_template('register.html')
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
 if __name__ == "__main__":
+    with app.app_context():
+        # Ensure upload folder exists
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        db.create_all()
     app.run(host="0.0.0.0", port=5000, debug=True)
