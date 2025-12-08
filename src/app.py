@@ -1,8 +1,7 @@
 from flask import Flask, render_template, request
 import json
-import os
 
-app = Flask(__name__)  # templates folder is now in project root
+app = Flask(__name__)  # Flask automatically finds templates/ in project root
 
 # Load cars
 try:
@@ -13,17 +12,7 @@ except:
 
 @app.route("/")
 def index():
-    brand = request.args.get('brand', '')
-    model = request.args.get('model', '')
-    min_price = request.args.get('min', 0, type=int)
-    max_price = request.args.get('max', 999999, type=int)
-    
-    filtered = [c for c in CARS if 
-                (not brand or c['brand'] == brand) and
-                (not model or c['model'] == model) and
-                c['price'] >= min_price and c['price'] <= max_price]
-    
-    return render_template('index.html', cars=filtered)
+    return render_template('index.html', cars=CARS)
 
 @app.route("/details/<id>")
 def details(id):
