@@ -1,48 +1,110 @@
-let favorites = JSON.parse(localStorage.getItem('carbazaar_favorites') || '[]');
+// Simple client-side interactions for filters, auth modal, and sell modal.
 
-function toggleFavorite(id, el) {
-    if (favorites.includes(id)) {
-        favorites = favorites.filter(f => f !== id);
-        el.classList.replace('fa-solid', 'fa-regular');
-        el.classList.remove('text-red-600');
+// Filters: brand (contains), price min/max
+function applyClientFilters() {
+    const brandVal = (document.getElementById('brandFilter')?.value || '').toLowerCase().trim();
+    const cityVal = (document.getElementById('cityFilter')?.value || '').toLowerCase().trim();
+    const currencyVal = (document.getElementById('currencyFilter')?.value || '').trim();
+    const minVal = parseFloat(document.getElementById('priceMin')?.value || '0') || 0;
+    const maxVal = parseFloat(document.getElementById('priceMax')?.value || '999999999') || 999999999;
+    const cards = document.querySelectorAll('#carGrid .card');
+    cards.forEach(card => {
+        const brand = card.dataset.brand || '';
+        const city = card.dataset.city || '';
+        const currency = card.dataset.currency || '';
+        const price = parseFloat(card.dataset.price || '0') || 0;
+        const matchesBrand = !brandVal || brand.includes(brandVal);
+        const matchesCity = !cityVal || city.includes(cityVal);
+        const matchesCurrency = !currencyVal || currency === currencyVal;
+        const matchesPrice = price >= minVal && price <= maxVal;
+        card.style.display = matchesBrand && matchesCity && matchesCurrency && matchesPrice ? '' : 'none';
+    });
+}
+
+function resetFilters() {
+    if (document.getElementById('brandFilter')) document.getElementById('brandFilter').value = '';
+    if (document.getElementById('priceMin')) document.getElementById('priceMin').value = '';
+    if (document.getElementById('priceMax')) document.getElementById('priceMax').value = '';
+    applyClientFilters();
+}
+
+// Modal helpers
+function openModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.add('show');
+}
+function closeModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.remove('show');
+}
+
+// Image preview for sell form
+function handleImagePreview(evt) {
+    const files = evt.target.files || [];
+    const preview = document.getElementById('imagePreview');
+    if (!preview) return;
+    preview.innerHTML = '';
+    Array.from(files).forEach(file => {
+        const url = URL.createObjectURL(file);
+        const img = document.createElement('img');
+        img.src = url;
+        img.className = 'thumb';
+        preview.appendChild(img);
+    });
+}
+
+// Wire up events on DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+    const applyBtn = document.getElementById('applyFilters');
+    const resetBtn = document.getElementById('resetFilters');
+    applyBtn?.addEventListener('click', (e) => { e.preventDefault(); applyClientFilters(); });
+    resetBtn?.addEventListener('click', (e) => { e.preventDefault(); resetFilters(); });
+
+    document.getElementById('sellBtn')?.addEventListener('click', (e) => { e.preventDefault(); openModal('sellModal'); });
+    document.getElementById('loginBtn')?.addEventListener('click', (e) => { e.preventDefault(); openModal('authModal'); setAuthMode('login'); });
+    document.getElementById('registerBtn')?.addEventListener('click', (e) => { e.preventDefault(); openModal('authModal'); setAuthMode('register'); });
+
+    document.querySelectorAll('.modal .close').forEach(btn => {
+        btn.addEventListener('click', () => closeModal(btn.dataset.close));
+    });
+
+    const imageInput = document.getElementById('imageInput');
+    imageInput?.addEventListener('change', handleImagePreview);
+
+    document.getElementById('sellForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('Demo: form submission will be wired to backend later.');
+        closeModal('sellModal');
+    });
+
+    document.getElementById('authForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        alert('Demo: auth will be wired to backend later.');
+        closeModal('authModal');
+    });
+
+    // Detail page thumbnails: swap main image
+    const mainImg = document.getElementById('mainImage');
+    const thumbs = document.querySelectorAll('.thumbs img');
+    if (mainImg && thumbs.length) {
+        thumbs.forEach(t => {
+            t.addEventListener('click', () => {
+                const src = t.dataset.src || t.src;
+                mainImg.src = src;
+            });
+        });
+    }
+});
+
+function setAuthMode(mode) {
+    const title = document.getElementById('authTitle');
+    const submit = document.getElementById('authSubmit');
+    if (!title || !submit) return;
+    if (mode === 'register') {
+        title.textContent = 'Register';
+        submit.textContent = 'Register (demo)';
     } else {
-        favorites.push(id);
-        el.classList.replace('fa-regular', 'fa-solid');
-        el.classList.add('text-red-600');
+        title.textContent = 'Login';
+        submit.textContent = 'Login (demo)';
     }
-    localStorage.setItem('carbazaar_favorites', JSON.stringify(favorites));
-}
-
-function applyFilters() {
-    const brand = document.getElementById('brands').value;
-    const model = document.getElementById('models').value;
-    const minPrice = document.getElementById('minPrice').value || 0;
-    const maxPrice = document.getElementById('maxPrice').value || 999999;
-
-    fetch(`/api/cars?brand=${brand}&model=${model}&min_price=${minPrice}&max_price=${maxPrice}`)
-        .then(r => r.json())
-        .then(cars => renderCards(cars));
-}
-
-function renderCards(cars) {
-    const container = document.getElementById('showCards');
-    if (!cars.length) {
-        container.innerHTML = '<h1 class="text-4xl text-red-600 col-span-3">No cars found!</h1>';
-        return;
-    }
-    container.innerHTML = cars.map(car => `
-        <div class="bg-white rounded-lg shadow hover:shadow-xl transition relative">
-            <i onclick="toggleFavorite('${car.id}', this)" class="fa-heart absolute top-4 right-4 text-2xl cursor-pointer z-10 
-                ${favorites.includes(car.id) ? 'fa-solid text-red-600' : 'fa-regular'}"></i>
-            <a href="/details/${car.id}">
-                <img src="${car.images[0]}" class="w-full h-56 object-cover rounded-t-lg" alt="">
-            </a>
-            <div class="p-4">
-                <div class="text-2xl font-bold">${car.price} ${car.currency}</div>
-                <div class="text-lg font-semibold uppercase">${car.brand} ${car.model}</div>
-                <div class="text-gray-600">${car.year} • ${car.engine}L • ${car.odometer} km</div>
-                <div class="text-sm text-gray-500 mt-2">${car.city} • ${car.dates}</div>
-            </div>
-        </div>
-    `).join('');
 }

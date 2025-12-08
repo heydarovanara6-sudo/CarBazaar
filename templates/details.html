@@ -4,32 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ car.brand }} {{ car.model }} - CarBazaar</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='output.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
 </head>
-<body class="bg-gray-100">
-    <header class="bg-white shadow">/* same header as index */</header>
+<body>
+    <header class="hero-header">
+        <div class="topbar">
+            <div class="logo">CarBazaar</div>
+            <nav>
+                <a href="/" class="nav-btn ghost">Back to listings</a>
+            </nav>
+        </div>
+        <div class="hero hero-compact">
+            <h1>{{ car.brand }} {{ car.model }}</h1>
+            <p>Detailed view</p>
+        </div>
+    </header>
 
-    <main class="container mx-auto py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div>
-                <img src="{{ car.images[0] }}" class="w-full rounded-lg shadow-lg" alt="">
+    <main class="details-page">
+        <div class="detail-grid">
+            <div class="detail-gallery">
+                <div class="main-image">
+                    <img id="mainImage" src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}" onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
+                </div>
+                {% if car.images|length > 1 %}
+                <div class="thumbs">
+                    {% for img in car.images %}
+                    <img class="thumb" data-src="{{ img }}" src="{{ img }}" alt="thumb" onerror="this.src='https://via.placeholder.com/120x90?text=No+Image'">
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
-            <div class="bg-white p-8 rounded-lg shadow">
-                <h1 class="text-4xl font-bold mb-4">{{ car.brand }} {{ car.model }}</h1>
-                <div class="text-3xl font-bold text-red-600 mb-6">{{ car.price }} {{ car.currency }}</div>
-                <ul class="space-y-3 text-lg">
-                    <li><strong>Year:</strong> {{ car.year }}</li>
-                    <li><strong>Engine:</strong> {{ car.engine }}L</li>
-                    <li><strong>Mileage:</strong> {{ car.odometer }} km</li>
-                    <li><strong>City:</strong> {{ car.city }}</li>
-                    <li><strong>Posted:</strong> {{ car.dates }}</li>
-                </ul>
-                <button class="mt-8 bg-red-600 text-white py-4 px-8 rounded text-xl hover:bg-red-700">
-                    Contact Seller
-                </button>
+
+            <div class="detail-card">
+                <div class="price-line">
+                    <div class="price-big">{{ car.price }} {{ car.currency }}</div>
+                    <div class="badges">
+                        <span class="badge">{{ car.year }}</span>
+                        <span class="badge">{{ car.city }}</span>
+                        <span class="badge soft">Views: —</span>
+                    </div>
+                </div>
+
+                <div class="spec-grid">
+                    <div class="spec"><span>Engine</span><strong>{{ car.engine }} L</strong></div>
+                    <div class="spec"><span>Mileage</span><strong>{{ car.odometer }} km</strong></div>
+                    <div class="spec"><span>Posted</span><strong>{{ car.dates }}</strong></div>
+                    <div class="spec"><span>Currency</span><strong>{{ car.currency }}</strong></div>
+                </div>
+
+                <div class="actions">
+                    <button class="btn full">Contact seller (demo)</button>
+                    <a class="btn ghost full" href="/">Back to listings</a>
+                </div>
             </div>
         </div>
     </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

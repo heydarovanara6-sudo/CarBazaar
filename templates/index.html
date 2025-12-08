@@ -4,105 +4,168 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CarBazaar - Buy & Sell Cars in Azerbaijan</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
-    <style>
-        .heart { transition: all 0.3s; }
-        .heart:hover { transform: scale(1.3); }
-        .card { transition: all 0.4s; }
-        .card:hover { transform: translateY(-12px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
-    </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Clean Header -->
-    <header class="bg-white shadow-lg sticky top-0 z-50">
-        <div class="bg-red-600 py-6">
-            <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
-                <div>
-                    <h1 class="text-4xl font-bold text-white">CarBazaar</h1>
-                    <p class="text-white opacity-90 text-lg">Buy & Sell Cars in Azerbaijan</p>
-                </div>
-                <div class="flex items-center gap-8 text-white">
-                    <a href="/favourites" class="flex items-center gap-2 text-lg hover:opacity-80">
-                        <i class="fa-solid fa-heart text-2xl"></i> Favorites
-                    </a>
-                    <button class="bg-white text-red-600 px-6 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
-                        <i class="fa-solid fa-user mr-2"></i> Login
-                    </button>
-                </div>
-            </div>
+<body>
+    <header>
+        <div class="topbar">
+            <div class="logo">CarBazaar</div>
+            <nav>
+                <a href="#" id="sellBtn" class="nav-btn primary">Add your car</a>
+                <a href="#" id="loginBtn" class="nav-btn ghost">Login</a>
+                <a href="#" id="registerBtn" class="nav-btn ghost">Register</a>
+            </nav>
+        </div>
+        <div class="hero">
+            <h1>CarBazaar</h1>
+            <p>Buy & Sell Cars in Azerbaijan</p>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-6 py-10">
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-10">
-            <!-- Filters -->
-            <aside class="bg-white p-8 rounded-2xl shadow-xl">
-                <h2 class="text-2xl font-bold mb-6 text-gray-800">Filters</h2>
-                <div class="space-y-5">
-                    <select id="brand" class="w-full p-4 border-2 rounded-xl text-gray-700 focus:border-red-600 focus:outline-none">
-                        <option value="">All Brands</option>
-                    </select>
-                    <select id="model" class="w-full p-4 border-2 rounded-xl text-gray-700 focus:border-red-600 focus:outline-none">
-                        <option value="">All Models</option>
-                    </select>
-                    <input type="number" id="minPrice" placeholder="Min Price (AZN)" class="w-full p-4 border-2 rounded-xl">
-                    <input type="number" id="maxPrice" placeholder="Max Price (AZN)" class="w-full p-4 border-2 rounded-xl">
-                    <button onclick="applyFilters()" class="w-full bg-red-600 text-white py-5 rounded-xl font-bold text-xl hover:bg-red-700 transition shadow-lg">
-                        Search Cars
-                    </button>
-                </div>
-            </aside>
+    <main>
+        {% set brand_options = [] %}
+        {% for car in cars %}
+            {% if car.brand not in brand_options %}
+                {% set _ = brand_options.append(car.brand) %}
+            {% endif %}
+        {% endfor %}
 
-            <!-- Car Grid -->
-            <div id="carGrid" class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
-                {% for car in cars %}
-                <div class="card bg-white rounded-2xl shadow-xl overflow-hidden">
-                    <div class="relative">
-                        <img src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-64 object-cover">
-                        <button onclick="toggleFavorite('{{ car.id }}', this)" class="heart absolute top-4 right-4 text-4xl text-white drop-shadow-2xl">
-                            <i class="fa-heart {% if car.id in favorites|default([]) %}fa-solid text-red-600{% else %}fa-regular{% endif %}"></i>
-                        </button>
-                    </div>
-                    <div class="p-6">
-                        <div class="text-3xl font-bold text-red-600 mb-2">{{ car.price }} {{ car.currency }}</div>
-                        <h3 class="text-2xl font-bold text-gray-800 mb-3">{{ car.brand }} {{ car.model }}</h3>
-                        <div class="text-gray-600 space-y-2 text-lg">
-                            <p>{{ car.year }} • {{ car.engine }}L • {{ car.odometer }} km</p>
-                            <p class="text-sm font-medium">{{ car.city }} • {{ car.dates }}</p>
-                        </div>
-                        <a href="/details/{{ car.id }}" class="mt-6 inline-block w-full bg-red-600 text-white text-center py-4 rounded-xl font-bold text-xl hover:bg-red-700 transition">
-                            View Details
-                        </a>
-                    </div>
-                </div>
-                {% endfor %}
+        <section class="filters">
+            <div class="filter-group">
+                <label for="brandFilter">Brand</label>
+                <select id="brandFilter">
+                    <option value="">Any</option>
+                    {% for b in brand_options %}
+                    <option value="{{ b|lower }}">{{ b }}</option>
+                    {% endfor %}
+                </select>
             </div>
+            <div class="filter-group">
+                <label for="priceMin">Price from</label>
+                <input id="priceMin" type="number" min="0" placeholder="0">
+            </div>
+            <div class="filter-group">
+                <label for="priceMax">Price to</label>
+                <input id="priceMax" type="number" min="0" placeholder="100000">
+            </div>
+            <div class="filter-group">
+                <label for="currencyFilter">Currency</label>
+                <select id="currencyFilter">
+                    <option value="">Any</option>
+                    <option value="AZN">AZN</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="cityFilter">City</label>
+                <input id="cityFilter" type="text" placeholder="e.g. Baku">
+            </div>
+            <div class="filter-actions">
+                <button id="applyFilters" class="btn small">Show listings</button>
+                <button id="resetFilters" class="btn small ghost">Reset</button>
+            </div>
+        </section>
+
+        <div class="grid" id="carGrid">
+            {% for car in cars %}
+            <div class="card"
+                 data-brand="{{ car.brand|lower }}"
+                 data-price="{{ car.price }}"
+                 data-city="{{ car.city|lower }}"
+                 data-currency="{{ car.currency }}">
+                <img src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}" onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                <div class="card-content">
+                    <div class="price">{{ car.price }} {{ car.currency }}</div>
+                    <div class="title">{{ car.brand }} {{ car.model }}</div>
+                    <div class="info">{{ car.year }} • {{ car.engine }}L • {{ car.odometer }} km</div>
+                    <div class="location">{{ car.city }} • {{ car.dates }}</div>
+                    <a href="/details/{{ car.id }}" class="btn">View Details</a>
+                </div>
+            </div>
+            {% endfor %}
         </div>
     </main>
 
-    <script>
-        let favorites = JSON.parse(localStorage.getItem('carbazaar_fav') || '[]');
-        function toggleFavorite(id, el) {
-            if (favorites.includes(id)) {
-                favorites = favorites.filter(f => f !== id);
-                el.querySelector('i').classList.replace('fa-solid', 'fa-regular');
-                el.querySelector('i').classList.remove('text-red-600');
-            } else {
-                favorites.push(id);
-                el.querySelector('i').classList.replace('fa-regular', 'fa-solid');
-                el.querySelector('i').classList.add('text-red-600');
-            }
-            localStorage.setItem('carbazaar_fav', JSON.stringify(favorites));
-        }
-        function applyFilters() {
-            const brand = document.getElementById('brand').value;
-            const model = document.getElementById('model').value;
-            const minPrice = document.getElementById('minPrice').value || 0;
-            const maxPrice = document.getElementById('maxPrice').value || 999999;
-            location.href = `/?brand=${brand}&model=${model}&min=${minPrice}&max=${maxPrice}`;
-        }
-    </script>
+    <!-- Sell modal (frontend only) -->
+    <div class="modal" id="sellModal">
+        <div class="modal-content">
+            <button class="close" data-close="sellModal">&times;</button>
+            <h2>Add your car</h2>
+            <p class="muted">Demo only; backend not wired yet.</p>
+            <form id="sellForm">
+                <div class="form-row">
+                    <label>Brand</label>
+                    <input name="brand" required>
+                </div>
+                <div class="form-row">
+                    <label>Model</label>
+                    <input name="model" required>
+                </div>
+                <div class="form-row two">
+                    <div>
+                        <label>Year</label>
+                        <input name="year" type="number" min="1950" max="2025" required>
+                    </div>
+                    <div>
+                        <label>Price</label>
+                        <input name="price" type="number" min="0" required>
+                    </div>
+                </div>
+                <div class="form-row two">
+                    <div>
+                        <label>Engine (L)</label>
+                        <input name="engine" type="number" step="0.1" min="0">
+                    </div>
+                    <div>
+                        <label>Mileage (km)</label>
+                        <input name="odometer" type="number" min="0">
+                    </div>
+                </div>
+                <div class="form-row two">
+                    <div>
+                        <label>City</label>
+                        <input name="city">
+                    </div>
+                    <div>
+                        <label>Currency</label>
+                        <select name="currency">
+                            <option>AZN</option>
+                            <option>USD</option>
+                            <option>EUR</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>Photos</label>
+                    <input name="images" id="imageInput" type="file" accept="image/*" multiple>
+                    <div id="imagePreview" class="preview-grid"></div>
+                </div>
+                <button type="submit" class="btn full">Submit (demo)</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auth modal -->
+    <div class="modal" id="authModal">
+        <div class="modal-content">
+            <button class="close" data-close="authModal">&times;</button>
+            <h2 id="authTitle">Login</h2>
+            <form id="authForm">
+                <div class="form-row">
+                    <label>Email</label>
+                    <input name="email" type="email" required>
+                </div>
+                <div class="form-row">
+                    <label>Password</label>
+                    <input name="password" type="password" required>
+                </div>
+                <button type="submit" class="btn full" id="authSubmit">Login (demo)</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

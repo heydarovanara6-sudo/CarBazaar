@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarBazaar - Buy & Sell Cars in Azerbaijan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+    <style>
+        .heart { transition: all 0.3s; }
+        .heart:hover { transform: scale(1.2); }
+        .card { transition: all 0.3s; }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="bg-gray-100 py-3 text-sm">
+            <div class="max-w-7xl mx-auto px-4 flex justify-between">
+                <div class="flex gap-8 text-gray-600">
+                    <span>Tap.az</span><span>Bina.az</span><span>Boss.az</span>
+                </div>
+                <div class="flex gap-8 text-gray-600">
+                    <span>Support: (012) 526-47-47</span>
+                    <span><a href="/favourites" class="flex items-center gap-2"><i class="fa-solid fa-heart"></i> Favorites</a></span>
+                    <span><i class="fa-solid fa-user"></i> Login</span>
+                </div>
+            </div>
+        </div>
+        <div class="bg-red-600 py-5">
+            <div class="max-w-7xl mx-auto px-4 text-white">
+                <h1 class="text-4xl font-bold">CarBazaar</h1>
+                <p class="text-lg opacity-90">Buy & Sell Cars in Azerbaijan</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <!-- Filters -->
+            <aside class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">Filters</h2>
+                <div class="space-y-4">
+                    <select id="brand" class="w-full p-4 border rounded-lg text-gray-700">
+                        <option value="">All Brands</option>
+                    </select>
+                    <select id="model" class="w-full p-4 border rounded-lg text-gray-700">
+                        <option value="">All Models</option>
+                    </select>
+                    <input type="number" id="minPrice" placeholder="Min Price" class="w-full p-4 border rounded-lg">
+                    <input type="number" id="maxPrice" placeholder="Max Price" class="w-full p-4 border rounded-lg">
+                    <button onclick="applyFilters()" class="w-full bg-red-600 text-white py-4 rounded-lg font-bold hover:bg-red-700 transition">
+                        Apply Filters
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Car Grid -->
+            <div id="carGrid" class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+                {% for car in cars %}
+                <div class="card bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl">
+                    <div class="relative">
+                        <img src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}" class="w-full h-64 object-cover">
+                        <button onclick="toggleFavorite('{{ car.id }}', this)" class="heart absolute top-4 right-4 text-3xl text-white drop-shadow-lg">
+                            <i class="fa-heart {% if car.id in favorites %}fa-solid text-red-600{% else %}fa-regular{% endif %}"></i>
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <div class="text-3xl font-bold text-red-600 mb-2">{{ car.price }} {{ car.currency }}</div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">{{ car.brand }} {{ car.model }}</h3>
+                        <div class="text-gray-600 space-y-1">
+                            <p>{{ car.year }} • {{ car.engine }}L • {{ car.odometer }} km</p>
+                            <p class="text-sm">{{ car.city }} • {{ car.dates }}</p>
+                        </div>
+                        <a href="/details/{{ car.id }}" class="mt-4 inline-block bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let favorites = JSON.parse(localStorage.getItem('carbazaar_fav') || '[]');
+        function toggleFavorite(id, el) {
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(f => f !== id);
+                el.querySelector('i').classList.replace('fa-solid', 'fa-regular');
+                el.querySelector('i').classList.remove('text-red-600');
+            } else {
+                favorites.push(id);
+                el.querySelector('i').classList.replace('fa-regular', 'fa-solid');
+                el.querySelector('i').classList.add('text-red-600');
+            }
+            localStorage.setItem('carbazaar_fav', JSON.stringify(favorites));
+        }
+        function applyFilters() {
+            const brand = document.getElementById('brand').value;
+            const model = document.getElementById('model').value;
+            const minPrice = document.getElementById('minPrice').value || 0;
+            const maxPrice = document.getElementById('maxPrice').value || 999999;
+            location.href = `/?brand=${brand}&model=${model}&min=${minPrice}&max=${maxPrice}`;
+        }
+    </script>
+</body>
+</html>
