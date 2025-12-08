@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ car.brand }} {{ car.model }} - CarBazaar</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
 </head>
+
 <body>
     <header class="hero-header">
         <div class="topbar">
             <div class="logo">CarBazaar</div>
             <nav>
-                <a href="/" class="nav-btn ghost">Back to listings</a>
+                <a href="/" class="nav-btn ghost">Back</a>
             </nav>
         </div>
         <div class="hero hero-compact">
@@ -26,12 +28,14 @@
             <div class="detail-grid">
                 <div class="detail-gallery">
                     <div class="main-image">
-                        <img id="mainImage" src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}" onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
+                        <img id="mainImage" src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}"
+                            onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
                     </div>
                     {% if car.images|length > 1 %}
                     <div class="thumbs">
                         {% for img in car.images %}
-                        <img class="thumb" data-src="{{ img }}" src="{{ img }}" alt="thumb" onerror="this.src='https://via.placeholder.com/120x90?text=No+Image'">
+                        <img class="thumb" data-src="{{ img }}" src="{{ img }}" alt="thumb"
+                            onerror="this.src='https://via.placeholder.com/120x90?text=No+Image'">
                         {% endfor %}
                     </div>
                     {% endif %}
@@ -58,8 +62,8 @@
                     </div>
 
                     <div class="actions">
-                        <button class="btn full">Contact seller (demo)</button>
-                        <a class="btn ghost full" href="/">Back to listings</a>
+                        <button class="btn full"><i class="fa-solid fa-phone"></i> Contact seller (demo)</button>
+                        <a class="btn ghost full" href="/"><i class="fa-solid fa-arrow-left"></i> Back</a>
                     </div>
                 </div>
             </div>
@@ -68,4 +72,5 @@
 
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
+
 </html>
