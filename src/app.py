@@ -2,58 +2,22 @@ from flask import Flask, render_template
 import json
 import os
 import re
-import urllib.parse
+import urllib.request
 
-try:
-    from datasets import load_dataset
-except Exception:
-    load_dataset = None
 
-try:
-    import cloudinary
-    from cloudinary import utils as cl_utils
-    CLOUDINARY_AVAILABLE = True
-except Exception:
-    CLOUDINARY_AVAILABLE = False
-
-def cloudinary_fetch_url(raw_url: str):
+def safe_image(url: str, brand: str = "Unknown"):
     """
-    Return a Cloudinary fetch URL with f_auto,q_auto if CLOUDINARY env is set.
-    Prefers the cloudinary package; falls back to manual URL construction.
+    Ensure we return a usable image URL:
+    - Use provided URL if it's an http/https link.
+    - Otherwise, fall back to brand image, then placeholder.
     """
-    if not raw_url:
-        return raw_url
+    candidate = url if (isinstance(url, str) and url.startswith("http")) else None
+    if not candidate:
+        candidate = BRAND_IMAGE_MAP.get(brand, PLACEHOLDER_IMG)
+    return candidate or PLACEHOLDER_IMG
 
-    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME")
-    api_key = os.getenv("CLOUDINARY_API_KEY")
-    api_secret = os.getenv("CLOUDINARY_API_SECRET")
 
-    if CLOUDINARY_AVAILABLE and cloud_name and api_key and api_secret:
-        # Configure once; cloudinary.config is idempotent
-        cloudinary.config(
-            cloud_name=cloud_name,
-            api_key=api_key,
-            api_secret=api_secret,
-            secure=True,
-        )
-        try:
-            fetch_url, _ = cl_utils.cloudinary_url(
-                raw_url,
-                type="fetch",
-                fetch_format="auto",
-                quality="auto",
-                secure=True,
-            )
-            return fetch_url
-        except Exception:
-            pass
-
-    if cloud_name:
-        quoted = urllib.parse.quote(raw_url, safe="")
-        return f"https://res.cloudinary.com/{cloud_name}/image/fetch/f_auto,q_auto/{quoted}"
-
-    return raw_url
-
+PLACEHOLDER_IMG = "https://via.placeholder.com/400x300?text=No+Image"
 
 # Brand-level image fallbacks (one representative image per brand)
 BRAND_IMAGE_MAP = {
@@ -117,62 +81,82 @@ def parse_odometer(raw: str):
         return 0
 
 
-def load_cars_from_hf(dataset_name=None, split=None):
-    """Fetch turbo.az dataset from HuggingFace and adapt to our schema."""
-    if not load_dataset:
-        return None
-    dataset_name = dataset_name or os.getenv("HF_DATASET", "vrashad/turbo_az")
-    split = split or os.getenv("HF_SPLIT", "train")
+def load_cars_from_js(js_url=None):
+    """
+    Fetch cars from a JS file (const data = [...]) and adapt to our schema.
+    Default source: GitHub raw data.js with image links.
+    """
+    src = js_url or os.getenv(
+        "JS_DATA_URL",
+        "https://raw.githubusercontent.com/aysumaharramovaa/turbo-az/main/data.js",
+    )
     try:
-        ds = load_dataset(dataset_name, split=split)
-
-        def first_image(row: dict):
-            # Try common keys for image URLs
-            for key in ["images", "image", "Image", "Image link", "image_link", "image_url", "Image URL", "photo", "Photo"]:
-                if key in row and row.get(key):
-                    val = row.get(key)
-                    if isinstance(val, list) and val:
-                        return str(val[0])
-                    if isinstance(val, str):
-                        return val
-            # Some datasets might store a single image URL under 'Link' (if it's direct)
-            if "Link" in row and isinstance(row.get("Link"), str) and row.get("Link").startswith("http"):
-                return row.get("Link")
-            return None
-
-        cars = []
-        for idx, row in enumerate(ds):
-            price, currency = parse_price(row.get("Price"))
-            engine = parse_engine(row.get("Engine"))
-            odometer = parse_odometer(row.get("Distance"))
-            name = row.get("Name", "")
-            parts = name.split(" ", 1)
-            brand = parts[0] if parts else "Unknown"
-            model = parts[1] if len(parts) > 1 else parts[0] if parts else "Unknown"
-            image = first_image(row) or BRAND_IMAGE_MAP.get(brand, "https://via.placeholder.com/400x300?text=Car")
-            image = cloudinary_fetch_url(image) or image
-            cars.append(
-                {
-                    "id": str(idx + 1000),
-                    "brand": brand,
-                    "model": model,
-                    "year": str(row.get("Year", "")),
-                    "price": price,
-                    "currency": currency,
-                    "engine": engine,
-                    "odometer": odometer,
-                    "city": row.get("City", "Baku"),
-                    "dates": row.get("Classified Date", "Today") or row.get("dates", "Today"),
-                    "images": [image],
-                }
-            )
-        return cars
+        with urllib.request.urlopen(src, timeout=15) as resp:
+            text = resp.read().decode("utf-8")
     except Exception:
         return None
 
+    # Extract array contents
+    start = text.find("[")
+    end = text.rfind("]")
+    if start == -1 or end == -1:
+        return None
+    body = text[start : end + 1]
 
-# Load cars: try configured HF dataset, fall back to the original zmmmdf/turbo.az, then empty
-CARS = load_cars_from_hf() or load_cars_from_hf("zmmmdf/turbo.az") or []
+    # Remove trailing commas before closing brackets/braces
+    body = re.sub(r",\s*]", "]", body)
+    body = re.sub(r",\s*}", "}", body)
+
+    # Quote object keys without touching URLs
+    body = re.sub(
+        r"(?P<prefix>[{,]\s*)(?P<key>[A-Za-z_][A-Za-z0-9_]*)\s*:",
+        r'\g<prefix>"\g<key>":',
+        body,
+    )
+
+    try:
+        arr = json.loads(body)
+    except Exception:
+        return None
+
+    cars = []
+    for idx, row in enumerate(arr):
+        brand = row.get("brand", "Unknown")
+        model = row.get("model", brand)
+        price = row.get("price", 0)
+        currency = row.get("currency", "AZN")
+        engine = row.get("engine", 0)
+        odometer = row.get("odometer", 0)
+        city = row.get("city", "Baku")
+        year = row.get("year", "")
+        dates = row.get("dates", "Today")
+        images = row.get("images") or []
+        img = images[0] if images else None
+        img = safe_image(img, brand)
+        cars.append(
+            {
+                "id": str(row.get("id", idx + 5000)),
+                "brand": brand,
+                "model": model,
+                "year": str(year),
+                "price": price,
+                "currency": currency,
+                "engine": engine,
+                "odometer": odometer,
+                "city": city,
+                "dates": dates,
+                "images": [img],
+            }
+        )
+    return cars
+
+
+def load_cars_from_hf(*args, **kwargs):
+    return None
+
+
+# Load cars only from JS dataset
+CARS = load_cars_from_js() or []
 
 @app.route("/")
 def index():

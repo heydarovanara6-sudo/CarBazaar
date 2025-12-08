@@ -13,5 +13,3 @@ pytest==9.0.1
 tomli==2.3.0
 typing_extensions==4.15.0
 Werkzeug==3.1.4
-datasets==2.19.0
-cloudinary==1.41.0
