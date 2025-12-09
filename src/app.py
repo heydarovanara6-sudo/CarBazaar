@@ -26,12 +26,19 @@ default_db = f'sqlite:///{os.path.join(PROJECT_ROOT, "users.db")}'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', default_db)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Configure Cloudinary
-cloudinary.config(
-    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    api_key=os.environ.get('CLOUDINARY_API_KEY'),
-    api_secret=os.environ.get('CLOUDINARY_API_SECRET')
-)
+# Configure Cloudinary (optional - only if credentials are provided)
+CLOUDINARY_ENABLED = all([
+    os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    os.environ.get('CLOUDINARY_API_KEY'),
+    os.environ.get('CLOUDINARY_API_SECRET')
+])
+
+if CLOUDINARY_ENABLED:
+    cloudinary.config(
+        cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+        api_key=os.environ.get('CLOUDINARY_API_KEY'),
+        api_secret=os.environ.get('CLOUDINARY_API_SECRET')
+    )
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -273,21 +280,25 @@ def add_car():
     city = request.form.get("city")
     currency = request.form.get("currency")
     
-    # Handle Image - Upload to Cloudinary
+    # Handle Image - Upload to Cloudinary (if configured)
     file = request.files.get('images')
     image_url = None
     if file and file.filename:
-        try:
-            # Upload to Cloudinary
-            upload_result = cloudinary.uploader.upload(
-                file,
-                folder="carbazaar",
-                resource_type="image"
-            )
-            image_url = upload_result.get('secure_url')
-        except Exception as e:
-            flash(f"Image upload failed: {str(e)}")
-            return redirect(url_for('index'))
+        if CLOUDINARY_ENABLED:
+            try:
+                # Upload to Cloudinary
+                upload_result = cloudinary.uploader.upload(
+                    file,
+                    folder="carbazaar",
+                    resource_type="image"
+                )
+                image_url = upload_result.get('secure_url')
+            except Exception as e:
+                flash(f"Image upload failed: {str(e)}")
+                return redirect(url_for('index'))
+        else:
+            # Cloudinary not configured - skip image upload
+            flash("Image upload is not configured. Please contact administrator.")
 
     new_car = Car(
         brand=brand,
