@@ -68,6 +68,12 @@ header nav {
     box-shadow: 0 10px 25px rgba(124, 58, 237, 0.35);
 }
 
+.load-more-container {
+    text-align: center;
+    margin-top: 3rem;
+    padding-bottom: 2rem;
+}
+
 .nav-btn.ghost:hover,
 .nav-btn.primary:hover {
     transform: translateY(-2px);
@@ -506,4 +512,4 @@ main {
         flex-direction: column;
         align-items: flex-start;
     }
-}
+}/* PW1: Feature style added */
