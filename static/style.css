@@ -6,7 +6,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     /* Overlay on top of the background photo for readability */
     background:
         linear-gradient(135deg, rgba(243, 232, 255, 0.85) 0%, rgba(233, 220, 248, 0.85) 100%),
