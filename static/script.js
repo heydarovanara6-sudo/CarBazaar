@@ -1,6 +1,37 @@
 // Simple client-side interactions for filters, auth modal, and sell modal.
 
-// Filters: brand (contains), price min/max
+// Load More Logic
+let visibleCount = 6;
+const loadIncrement = 6;
+
+function updateVisibleCars() {
+    const cards = document.querySelectorAll('#carGrid .card');
+    // Consider currently filtered cards only if we combine with filters, 
+    // but for now let's just do simple pagination on the DOM list.
+    // Actually, it interacts with filters. 
+    // Let's make "Load More" only affect the "limit" of visible items.
+
+    // Better approach for simple client side:
+    // Show all matching filters, but only up to 'visibleCount'
+
+    applyClientFilters();
+}
+
+// Update applyClientFilters to respect visibleCount? 
+// Or separate concerns. Let's separate for simplicity in this hotfix.
+// Actually, hiding/showing based on index is easiest.
+
+function initLoadMore() {
+    const btn = document.getElementById('loadMoreBtn');
+    if (btn) {
+        btn.addEventListener('click', () => {
+            visibleCount += loadIncrement;
+            applyClientFilters(); // Re-run display logic with new count
+        });
+    }
+}
+
+// Refactored applyClientFilters to include Limit
 function applyClientFilters() {
     const brandVal = (document.getElementById('brandFilter')?.value || '').toLowerCase().trim();
     const cityVal = (document.getElementById('cityFilter')?.value || '').toLowerCase().trim();
@@ -8,6 +39,10 @@ function applyClientFilters() {
     const minVal = parseFloat(document.getElementById('priceMin')?.value || '0') || 0;
     const maxVal = parseFloat(document.getElementById('priceMax')?.value || '999999999') || 999999999;
     const cards = document.querySelectorAll('#carGrid .card');
+
+    let visibleMatches = 0;
+    let totalMatches = 0;
+
     cards.forEach(card => {
         const brand = card.dataset.brand || '';
         const city = card.dataset.city || '';
@@ -17,10 +52,32 @@ function applyClientFilters() {
         const matchesCity = !cityVal || city.includes(cityVal);
         const matchesCurrency = !currencyVal || currency === currencyVal;
         const matchesPrice = price >= minVal && price <= maxVal;
-        card.style.display = matchesBrand && matchesCity && matchesCurrency && matchesPrice ? '' : 'none';
-    });
-}
 
+        const isMatch = matchesBrand && matchesCity && matchesCurrency && matchesPrice;
+
+        if (isMatch) {
+            totalMatches++;
+            if (visibleMatches < visibleCount) {
+                card.style.display = '';
+                visibleMatches++;
+            } else {
+                card.style.display = 'none';
+            }
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Toggle Load More button visibility
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        if (visibleMatches >= totalMatches) {
+            loadMoreBtn.style.display = 'none';
+        } else {
+            loadMoreBtn.style.display = 'inline-block';
+        }
+    }
+}
 function resetFilters() {
     if (document.getElementById('brandFilter')) document.getElementById('brandFilter').value = '';
     if (document.getElementById('priceMin')) document.getElementById('priceMin').value = '';
@@ -84,6 +141,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const resetBtn = document.getElementById('resetFilters');
     applyBtn?.addEventListener('click', (e) => { e.preventDefault(); applyClientFilters(); });
     resetBtn?.addEventListener('click', (e) => { e.preventDefault(); resetFilters(); });
+
+    initLoadMore();
+    applyClientFilters(); // Initial run to set visibility
+
 
     document.getElementById('sellBtn')?.addEventListener('click', (e) => { e.preventDefault(); openModal('sellModal'); });
     document.getElementById('loginBtn')?.addEventListener('click', (e) => { e.preventDefault(); openModal('authModal'); setAuthMode('login'); });
