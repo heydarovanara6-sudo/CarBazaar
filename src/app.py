@@ -6,6 +6,9 @@ import urllib.request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Flask looks for static/ and templates/ in project root
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -22,10 +25,13 @@ app.secret_key = 'some_secret_key_for_session_management' # Change this in produ
 default_db = f'sqlite:///{os.path.join(PROJECT_ROOT, "users.db")}'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', default_db)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, '../static/uploads')
 
-# Ensure upload directory exists
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+# Configure Cloudinary
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET')
+)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -58,15 +64,15 @@ class Car(db.Model):
     engine = db.Column(db.Float, default=0.0)
     odometer = db.Column(db.Integer, default=0)
     city = db.Column(db.String(50), default='Baku')
-    image_filename = db.Column(db.String(255)) # Store filename in static/uploads
+    image_url = db.Column(db.String(500)) # Store Cloudinary URL
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
     @property
     def images(self):
         # Helper to return list of images (compatible with existing template logic)
-        if self.image_filename:
-            return [url_for('static', filename='uploads/' + self.image_filename)]
+        if self.image_url:
+            return [self.image_url]
         return ["https://via.placeholder.com/400x300?text=No+Image"]
     
     @property
@@ -267,15 +273,21 @@ def add_car():
     city = request.form.get("city")
     currency = request.form.get("currency")
     
-    # Handle Image
+    # Handle Image - Upload to Cloudinary
     file = request.files.get('images')
-    filename = None
+    image_url = None
     if file and file.filename:
-        ext = os.path.splitext(file.filename)[1]
-        # Use UUID to prevent filename collisions
-        unique_name = f"{uuid.uuid4().hex}{ext}"
-        filename = secure_filename(unique_name)
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        try:
+            # Upload to Cloudinary
+            upload_result = cloudinary.uploader.upload(
+                file,
+                folder="carbazaar",
+                resource_type="image"
+            )
+            image_url = upload_result.get('secure_url')
+        except Exception as e:
+            flash(f"Image upload failed: {str(e)}")
+            return redirect(url_for('index'))
 
     new_car = Car(
         brand=brand,
@@ -286,7 +298,7 @@ def add_car():
         engine=engine,
         odometer=odometer,
         city=city,
-        image_filename=filename,
+        image_url=image_url,
         owner=current_user
     )
     
