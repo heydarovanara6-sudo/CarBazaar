@@ -383,9 +383,9 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+# Create tables if they don't exist (for tests and first run)
+with app.app_context():
+    db.create_all()
+
 if __name__ == "__main__":
-    with app.app_context():
-        # Ensure upload folder exists
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        db.create_all()
     app.run(host="0.0.0.0", port=5000, debug=True)
