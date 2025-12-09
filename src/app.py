@@ -18,9 +18,9 @@ app = Flask(__name__,
 app.secret_key = 'some_secret_key_for_session_management' # Change this in production!
 
 # Database Configuration
-# Use SQLite locally. For AlwaysData, change this URI to your MySQL connection string.
-# e.g., 'mysql+pymysql://user:password@host/dbname'
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(PROJECT_ROOT, "users.db")}'
+# Use environment variable for DB URI (production), fallback to SQLite (dev)
+default_db = f'sqlite:///{os.path.join(PROJECT_ROOT, "users.db")}'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', default_db)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(BASE_DIR, '../static/uploads')
 
@@ -302,6 +302,22 @@ def my_ads():
     # Fetch cars belonging to current user
     user_cars = Car.query.filter_by(user_id=current_user.id).order_by(Car.date_posted.desc()).all()
     return render_template('my_ads.html', cars=user_cars)
+
+@app.route("/delete_car/<int:car_id>", methods=["POST"])
+@login_required
+def delete_car(car_id):
+    car = Car.query.get_or_404(car_id)
+    
+    # Verify ownership
+    if car.user_id != current_user.id:
+        flash("You can only delete your own ads!")
+        return redirect(url_for('my_ads'))
+    
+    # Delete the car
+    db.session.delete(car)
+    db.session.commit()
+    flash("Ad deleted successfully!")
+    return redirect(url_for('my_ads'))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
