@@ -4,15 +4,18 @@ FROM python:3.12-slim
 # Set the working directory inside the container
 WORKDIR /app
 
+# Use ephemeral DB in /tmp to ensure write permissions
+ENV SQLALCHEMY_DATABASE_URI=sqlite:////tmp/users.db
+
 # Copy the requirements file and install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application's code
-COPY ./src .
+# Copy the entire project (including src, static, templates)
+COPY . .
 
 # Expose the port the app runs on
 EXPOSE 5000
 
-# Define the command to run your app
-CMD ["python", "app.py"]
+# Define the command to run your app module from root
+CMD ["python", "-m", "src.app"]
