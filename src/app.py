@@ -12,7 +12,9 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 # PROJECT_ROOT is the parent of src/ (i.e., /home/nargiz/CarBazaar)
 PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, '..'))
 
-app = Flask(__name__, static_folder='../static', template_folder='../templates')
+app = Flask(__name__, 
+            static_folder=os.path.join(PROJECT_ROOT, 'static'), 
+            template_folder=os.path.join(PROJECT_ROOT, 'templates'))
 app.secret_key = 'some_secret_key_for_session_management' # Change this in production!
 
 # Database Configuration
