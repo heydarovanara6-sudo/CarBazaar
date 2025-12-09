@@ -6,3 +6,4 @@ Inspired by Turbo.az: Buy, sell, and compare new/used cars in Azerbaijan.
 - Car listings with photos and prices
 - Search by model, year, price
 - User ads and buyer inquiries
+# PW4: Trigger CI
