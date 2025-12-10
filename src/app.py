@@ -287,22 +287,34 @@ def add_car():
     # Handle Image - Upload to Cloudinary (if configured)
     file = request.files.get('images')
     image_url = None
+    
+    # Debug logging
+    print(f"[DEBUG] CLOUDINARY_ENABLED: {CLOUDINARY_ENABLED}")
+    print(f"[DEBUG] File received: {file.filename if file and file.filename else 'None'}")
+    
     if file and file.filename:
         if CLOUDINARY_ENABLED:
             try:
                 # Upload to Cloudinary
+                print(f"[DEBUG] Uploading to Cloudinary...")
                 upload_result = cloudinary.uploader.upload(
                     file,
                     folder="carbazaar",
                     resource_type="image"
                 )
                 image_url = upload_result.get('secure_url')
+                print(f"[DEBUG] Upload successful! URL: {image_url}")
+                flash(f"Image uploaded successfully!", "success")
             except Exception as e:
-                flash(f"Image upload failed: {str(e)}")
-                return redirect(url_for('index'))
+                print(f"[ERROR] Cloudinary upload failed: {str(e)}")
+                flash(f"Image upload failed: {str(e)}", "error")
+                # Don't return - still save the car without image
         else:
             # Cloudinary not configured - skip image upload
-            flash("Image upload is not configured. Please contact administrator.")
+            print("[WARNING] Cloudinary not configured")
+            flash("Image upload is not configured. Car will be added without image.", "warning")
+    else:
+        print("[DEBUG] No image file provided")
 
     new_car = Car(
         brand=brand,
@@ -320,7 +332,12 @@ def add_car():
     db.session.add(new_car)
     db.session.commit()
     
-    flash("Car added successfully!")
+    print(f"[DEBUG] Car saved to DB with ID: {new_car.id}, Image URL: {new_car.image_url}")
+    
+    if image_url:
+        flash(f"Car added successfully with image!", "success")
+    else:
+        flash(f"Car added successfully (no image uploaded)", "info")
     return redirect(url_for('index'))
 
 @app.route("/my_ads")
