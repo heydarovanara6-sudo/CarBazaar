@@ -19,3 +19,4 @@ pymysql
 cloudinary
 
 python-dotenv
+gunicorn
