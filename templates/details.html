@@ -27,7 +27,7 @@
                 <div class="chips">
                     <span class="chip">{{ car.year }}</span>
                     <span class="chip">{{ car.city }}</span>
-                    <span class="chip soft">Views: —</span>
+                    <span class="chip soft">Views: {{ car.views|default(0) }}</span>
                 </div>
             </div>
 

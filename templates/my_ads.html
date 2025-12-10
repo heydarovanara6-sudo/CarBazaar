@@ -2,7 +2,16 @@
 
 {% block content %}
 <div style="padding: 20px 5%; max-width: 1200px; margin: 0 auto;">
-    <h2 style="margin-bottom: 20px;">My Ads</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2>My Ads</h2>
+        {% if cars %}
+        <form method="POST" action="{{ url_for('delete_all_ads') }}"
+            onsubmit="return confirm('WARNING: This will delete ALL your ads permanently. Are you sure?');">
+            <button type="submit" class="btn" style="background: #dc2626; border-color: #dc2626; color: white;">Delete
+                All Ads</button>
+        </form>
+        {% endif %}
+    </div>
 
     {% if cars %}
     <div class="grid" id="carGrid">

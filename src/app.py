@@ -81,6 +81,7 @@ class Car(db.Model):
     odometer = db.Column(db.Integer, default=0)
     city = db.Column(db.String(50), default='Baku')
     image_url = db.Column(db.String(500)) # Store Cloudinary URL
+    views = db.Column(db.Integer, default=0)
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
@@ -270,6 +271,11 @@ def details(id):
     if not car:
         # Fallback to demo cars (ids are strings like "5000")
         car = next((c for c in CARS if str(c["id"]) == str(id)), None)
+    
+    if car and isinstance(car, Car): # Only increment for DB cars
+        car.views += 1
+        db.session.commit()
+        
     return render_template('details.html', car=car) if car else ("Not found", 404)
 
 @app.route("/add_car", methods=["POST"])
@@ -371,6 +377,20 @@ def delete_car(car_id):
     db.session.delete(car)
     db.session.commit()
     flash("Ad deleted successfully!")
+    return redirect(url_for('my_ads'))
+
+@app.route("/delete_all_ads", methods=["POST"])
+@login_required
+def delete_all_ads():
+    # Delete all cars belonging to current user
+    try:
+        num_deleted = Car.query.filter_by(user_id=current_user.id).delete()
+        db.session.commit()
+        flash(f"Deleted all {num_deleted} ads successfully!", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting ads: {str(e)}", "error")
+        
     return redirect(url_for('my_ads'))
 
 @app.route("/login", methods=["GET", "POST"])

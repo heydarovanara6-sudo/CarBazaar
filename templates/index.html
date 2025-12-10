@@ -58,7 +58,8 @@
         <div class="card-content">
             <div class="price">{{ car.price }} {{ car.currency }}</div>
             <div class="title">{{ car.brand }} {{ car.model }}</div>
-            <div class="info">{{ car.year }} • {{ car.engine }}L • {{ car.odometer }} km</div>
+            <div class="info">{{ car.year }} • {{ car.engine }}L • {{ car.odometer }} km • 👁️ {{ car.views|default(0)
+                }}</div>
             <div class="location">{{ car.city }} • {{ car.dates }}</div>
             <div class="location" style="color: purple; margin-top: 4px;">Seller: {{ car.owner.username if car.owner
                 else 'Official' }}</div>
