@@ -9,6 +9,7 @@ env/
 instance/
 .flaskenv
 *.log
+*.db
 
 # IDEs
 .idea/

@@ -1,20 +1,23 @@
-import sys
-import os
-
-# Ensure project root is on path so `src` is importable
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from src.app import app
-
-
-def test_index_route():
-    client = app.test_client()
+def test_index_route(client):
+    """Test that the index page loads successfully."""
     response = client.get('/')
     assert response.status_code == 200
     assert b"CarBazaar" in response.data
 
 
-def test_details_not_found():
-    client = app.test_client()
+def test_details_not_found(client):
+    """Test that non-existent car details return 404."""
     response = client.get('/details/does-not-exist')
     assert response.status_code == 404
+
+
+def test_login_page_loads(client):
+    """Test that the login page loads successfully."""
+    response = client.get('/login')
+    assert response.status_code == 200
+
+
+def test_register_page_loads(client):
+    """Test that the register page loads successfully."""
+    response = client.get('/register')
+    assert response.status_code == 200
