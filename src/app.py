@@ -29,6 +29,11 @@ app.secret_key = 'some_secret_key_for_session_management' # Change this in produ
 default_db = f'sqlite:///{os.path.join(PROJECT_ROOT, "users.db")}'
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URI', default_db)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 280,
+    "pool_timeout": 20,
+}
 
 # Configure Cloudinary (optional - only if credentials are provided)
 CLOUDINARY_ENABLED = all([
@@ -290,7 +295,7 @@ def add_car():
     
     # Debug logging
     print(f"[DEBUG] CLOUDINARY_ENABLED: {CLOUDINARY_ENABLED}")
-    print(f"[DEBUG] File received: {file.filename if file and file.filename else 'None'}")
+    print(f"[DEBUG] File received: {file.filename if file else 'None'}")
     
     if file and file.filename:
         if CLOUDINARY_ENABLED:
@@ -304,17 +309,22 @@ def add_car():
                 )
                 image_url = upload_result.get('secure_url')
                 print(f"[DEBUG] Upload successful! URL: {image_url}")
-                flash(f"Image uploaded successfully!", "success")
+                flash(f"Image uploaded successfully! URL: {image_url}", "success")
             except Exception as e:
-                print(f"[ERROR] Cloudinary upload failed: {str(e)}")
-                flash(f"Image upload failed: {str(e)}", "error")
-                # Don't return - still save the car without image
+                import traceback
+                traceback.print_exc()
+                error_msg = f"Cloudinary Upload Error: {str(e)}"
+                print(f"[ERROR] {error_msg}")
+                flash(error_msg, "error")
+                # Don't return - still save the car without image But wait
+                # If we want to debug, we should probably stop? No, let's let it save so we see if the car appears.
         else:
             # Cloudinary not configured - skip image upload
-            print("[WARNING] Cloudinary not configured")
-            flash("Image upload is not configured. Car will be added without image.", "warning")
+            print("[WARNING] Cloudinary not configured. Check Env Vars.")
+            flash("Cloudinary not configured. Check CLOUDINARY_CLOUD_NAME, _API_KEY, _API_SECRET", "warning")
     else:
-        print("[DEBUG] No image file provided")
+        print("[DEBUG] No image file provided or filename empty")
+        flash("No image selected!", "warning")
 
     new_car = Car(
         brand=brand,
