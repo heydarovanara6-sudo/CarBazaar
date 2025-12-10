@@ -9,6 +9,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+from dotenv import load_dotenv
+
+# Load environment variables from .env file (for local development)
+load_dotenv()
 
 # Flask looks for static/ and templates/ in project root
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
