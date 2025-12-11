@@ -16,7 +16,6 @@ Werkzeug==3.1.4
 Flask-SQLAlchemy
 Flask-Login
 pymysql
-cloudinary
-
 python-dotenv
 gunicorn
+requests

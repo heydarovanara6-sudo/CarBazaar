@@ -6,9 +6,7 @@ import urllib.request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+import requests
 from dotenv import load_dotenv
 
 # Load environment variables from .env file (for local development)
@@ -35,32 +33,41 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_timeout": 20,
 }
 
-# Configure Cloudinary (optional - only if credentials are provided)
-CLOUDINARY_ENABLED = all([
-    os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    os.environ.get('CLOUDINARY_API_KEY'),
-    os.environ.get('CLOUDINARY_API_SECRET')
-])
+# Unsplash Configuration
+UNSPLASH_ACCESS_KEY = os.environ.get('UNSPLASH_ACCESS_KEY')
 
-if CLOUDINARY_ENABLED:
-    # Strict sanitization
-    c_cloud = os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip().replace('"', '').replace("'", "")
-    c_key = os.environ.get('CLOUDINARY_API_KEY', '').strip().replace('"', '').replace("'", "")
-    c_secret = os.environ.get('CLOUDINARY_API_SECRET', '').strip().replace('"', '').replace("'", "")
+if not UNSPLASH_ACCESS_KEY:
+    print("[WARNING] UNSPLASH_ACCESS_KEY not set. Image fetching will fail (or use placeholders).")
 
-    # Ensure API Key is digits only (common error is pasting 'Key=' or similar)
-    if not c_key.isdigit():
-        print(f"[WARNING] API Key contains non-digits: '{c_key}'. Attempting to extract digits.")
-        c_key = "".join(filter(str.isdigit, c_key))
-        print(f"[INFO] New API Key: '{c_key}'")
-
-    print(f"[DEBUG] Configured Cloudinary: Cloud={c_cloud}, Key={c_key[:4]}***{c_key[-4:] if len(c_key)>4 else ''}")
-
-    cloudinary.config(
-        cloud_name=c_cloud,
-        api_key=c_key,
-        api_secret=c_secret
-    )
+def fetch_unsplash_image(query):
+    """
+    Search Unsplash for a photo matching the query.
+    Returns the URL of the first result, or None.
+    """
+    if not UNSPLASH_ACCESS_KEY:
+        print("[DEBUG] Unsplash key missing, returning None.")
+        return None
+        
+    url = "https://api.unsplash.com/search/photos"
+    params = {
+        "query": query,
+        "page": 1,
+        "per_page": 1,
+        "orientation": "landscape",
+        "client_id": UNSPLASH_ACCESS_KEY
+    }
+    
+    try:
+        response = requests.get(url, params=params, timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        if data['results']:
+            # return regular size
+            return data['results'][0]['urls']['regular']
+    except Exception as e:
+        print(f"[ERROR] Unsplash API error: {e}")
+    
+    return None
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -308,51 +315,21 @@ def add_car():
     city = request.form.get("city")
     currency = request.form.get("currency")
     
-    # Handle Image - Upload to Cloudinary (if configured)
-    file = request.files.get('images')
-    image_url = None
+    # Handle Image - Fetch from Unsplash
+    # We construct a query like "BMW X5 car"
+    search_query = f"{brand} {model} car"
+    print(f"[DEBUG] Fetching Unsplash image for: {search_query}")
     
-    # Debug logging
-    print(f"[DEBUG] CLOUDINARY_ENABLED: {CLOUDINARY_ENABLED}")
-    print(f"[DEBUG] File received: {file.filename if file else 'None'}")
+    image_url = fetch_unsplash_image(search_query)
     
-    if file and file.filename:
-        # Robustness: Check file size and reset pointer
-        file.seek(0, os.SEEK_END)
-        file_length = file.tell()
-        file.seek(0)
-        print(f"[DEBUG] File size: {file_length} bytes")
-
-        if file_length == 0:
-            print("[WARNING] File is empty used 0 bytes")
-            flash("Uploaded file is empty!", "warning")
-        elif CLOUDINARY_ENABLED:
-            try:
-                # Upload to Cloudinary
-                print(f"[DEBUG] Uploading to Cloudinary...")
-                upload_result = cloudinary.uploader.upload(
-                    file,
-                    folder="carbazaar",
-                    resource_type="image"
-                )
-                image_url = upload_result.get('secure_url')
-                print(f"[DEBUG] Upload successful! URL: {image_url}")
-                flash(f"Image uploaded successfully! URL: {image_url}", "success")
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
-                error_msg = f"Cloudinary Upload Error: {str(e)}"
-                print(f"[ERROR] {error_msg}")
-                flash(error_msg, "error")
-                # Don't return - still save the car without image But wait
-                # If we want to debug, we should probably stop? No, let's let it save so we see if the car appears.
-        else:
-            # Cloudinary not configured - skip image upload
-            print("[WARNING] Cloudinary not configured. Check Env Vars.")
-            flash("Cloudinary not configured. Check CLOUDINARY_CLOUD_NAME, _API_KEY, _API_SECRET", "warning")
+    if image_url:
+        flash("Found a beautiful image for your car!", "success")
     else:
-        print("[DEBUG] No image file provided or filename empty")
-        flash("No image selected!", "warning")
+        print("[WARNING] Could not fetch image from Unsplash.")
+        # We can leave image_url as None, the frontend or model has a placeholder fallback?
+        # Model property 'images' returns placeholder if None.
+        # But let's be explicit if we want.
+        flash("Could not auto-find an image, using placeholder.", "warning")
 
     new_car = Car(
         brand=brand,
@@ -456,35 +433,7 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route("/debug/cloudinary")
-def debug_cloudinary():
-    """
-    Diagnostic route to verify Cloudinary configuration.
-    """
-    config = cloudinary.config()
-    
-    # Test connection
-    conn_status = "Unknown"
-    error_details = None
-    try:
-        # api.ping() is not always available, try listing resources (limit 1) or usage
-        # usage() is a good admin API test
-        cloudinary.api.usage()
-        conn_status = "Success"
-    except Exception as e:
-        conn_status = "Failed"
-        error_details = str(e)
 
-    return {
-        "cloud_name": config.cloud_name,
-        "api_key_masked": f"{config.api_key[:4]}***{config.api_key[-4:]}" if config.api_key and len(config.api_key) > 8 else "INVALID/SHORT",
-        "api_key_length": len(config.api_key) if config.api_key else 0,
-        "api_secret_masked": f"{config.api_secret[:4]}...{config.api_secret[-4:]}" if config.api_secret and len(config.api_secret) > 8 else "Not Set/Short",
-        "connection_test": conn_status,
-        "error_details": error_details,
-        "env_var_raw_cloud": os.environ.get('CLOUDINARY_CLOUD_NAME', 'NOT_SET'),
-        "env_var_raw_key_len": len(os.environ.get('CLOUDINARY_API_KEY', '')),
-    }
 
 # Create tables if they don't exist (for tests and first run)
 with app.app_context():
