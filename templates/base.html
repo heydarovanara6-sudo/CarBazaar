@@ -99,7 +99,6 @@
     <main>
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        {% if messages %}
         <div class="flashes">
             {% for category, message in messages %}
             <div class="alert {{ category }}">
