@@ -43,11 +43,10 @@ if not IMGBB_API_KEY:
 def upload_to_imgbb(file_storage):
     """
     Upload a file to ImgBB.
-    Returns the URL of the uploaded image, or None.
+    Returns (url, error_message).
     """
     if not IMGBB_API_KEY:
-        print("[DEBUG] ImgBB API Key missing.")
-        return None
+        return None, "ImgBB API Key missing from configuration"
         
     url = "https://api.imgbb.com/1/upload"
     payload = {
@@ -70,18 +69,22 @@ def upload_to_imgbb(file_storage):
             files=files,
             timeout=30
         )
-        response.raise_for_status()
-        data = response.json()
         
-        if data.get('success'):
-            return data['data']['url']
+        try:
+            data = response.json()
+        except:
+             return None, f"Invalid JSON response: {response.text[:100]}"
+
+        if response.status_code == 200 and data.get('success'):
+            return data['data']['url'], None
         else:
-            print(f"[ERROR] ImgBB upload failed: {data}")
+            error_msg = data.get('error', {}).get('message', 'Unknown ImgBB error')
+            return None, f"ImgBB Error: {error_msg}"
             
     except Exception as e:
-        print(f"[ERROR] ImgBB API error: {e}")
-    
-    return None
+        return None, f"Upload Exception: {str(e)}"
+
+
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -329,18 +332,19 @@ def add_car():
     city = request.form.get("city")
     currency = request.form.get("currency")
     
-    # Handle Image - Upload to Imgur
+    # Handle Image - Upload to ImgBB
     file = request.files.get('images')
     image_url = None
+    upload_error = None
     
     if file and file.filename:
         print(f"[DEBUG] Uploading file: {file.filename}")
-        image_url = upload_to_imgbb(file)
+        image_url, upload_error = upload_to_imgbb(file)
         
         if image_url:
             flash("Image uploaded successfully!", "success")
         else:
-            flash("Image upload failed. Check logs.", "error")
+            flash(f"Image upload failed: {upload_error}", "error")
     else:
         print("[DEBUG] No image file provided")
 
