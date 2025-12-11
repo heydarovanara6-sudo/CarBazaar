@@ -304,7 +304,16 @@ def add_car():
     print(f"[DEBUG] File received: {file.filename if file else 'None'}")
     
     if file and file.filename:
-        if CLOUDINARY_ENABLED:
+        # Robustness: Check file size and reset pointer
+        file.seek(0, os.SEEK_END)
+        file_length = file.tell()
+        file.seek(0)
+        print(f"[DEBUG] File size: {file_length} bytes")
+
+        if file_length == 0:
+            print("[WARNING] File is empty used 0 bytes")
+            flash("Uploaded file is empty!", "warning")
+        elif CLOUDINARY_ENABLED:
             try:
                 # Upload to Cloudinary
                 print(f"[DEBUG] Uploading to Cloudinary...")
