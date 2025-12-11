@@ -35,22 +35,22 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 # Imgur Configuration
 # ImgBB Configuration
-IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY')
-
-if not IMGBB_API_KEY:
-    print("[WARNING] IMGBB_API_KEY not set. Uploads will fail.")
-
 def upload_to_imgbb(file_storage):
     """
     Upload a file to ImgBB.
     Returns (url, error_message).
     """
-    if not IMGBB_API_KEY:
+    # Fetch at runtime to ensure we get the latest env var
+    api_key = os.environ.get('IMGBB_API_KEY')
+    
+    if not api_key:
+        # Debugging: Print keys to see if we have a typo (safe, prompt only shows keys)
+        print(f"[DEBUG] API Key missing. Env keys: {list(os.environ.keys())}") 
         return None, "ImgBB API Key missing from configuration"
         
     url = "https://api.imgbb.com/1/upload"
     payload = {
-        "key": IMGBB_API_KEY,
+        "key": api_key,
     }
     
     try:
