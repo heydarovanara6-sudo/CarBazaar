@@ -1,31 +1,42 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="modal-content"
-    style="max-width: 400px; margin: 50px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <h2>Login</h2>
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    {% for message in messages %}
-    <div style="background: #fee; color: #c00; padding: 10px; margin-bottom: 10px; border-radius: 4px;">{{ message }}
+<style>
+    .site-header {
+        display: none;
+    }
+
+
+</style>
+<section>
+    <div class="auth-page">
+        <div class="auth-shell">
+            <div class="auth-card">
+                <h3>Login</h3>
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                <div class="auth-alert">
+                    {% for message in messages %}
+                    <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                <form method="POST" action="{{ url_for('login') }}" class="auth-form" autocomplete="off">
+                    <label>
+                        <span>Username</span>
+                        <input name="username" type="text" required autocomplete="username" placeholder="Your username">
+                    </label>
+                    <label>
+                        <span>Password</span>
+                        <input name="password" type="password" required autocomplete="current-password"
+                            placeholder="••••••••">
+                    </label>
+                    <button type="submit" class="btn full">Sign in</button>
+                </form>
+                <p class="auth-switch">Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
+            </div>
+        </div>
     </div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
-    <form method="POST" action="{{ url_for('login') }}" autocomplete="off">
-        <div class="form-row">
-            <label>Username</label>
-            <input name="username" type="text" required autocomplete="off"
-                style="width: 100%; padding: 8px; margin-top: 4px;">
-        </div>
-        <div class="form-row">
-            <label>Password</label>
-            <input name="password" type="password" required autocomplete="current-password"
-                style="width: 100%; padding: 8px; margin-top: 4px;">
-        </div>
-        <button type="submit" class="btn full" style="margin-top: 15px;">Login</button>
-    </form>
-    <p style="text-align: center; margin-top: 10px;">Don't have an account? <a
-            href="{{ url_for('register') }}">Register</a></p>
-</div>
+</section>
 {% endblock %}
