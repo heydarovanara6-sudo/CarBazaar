@@ -43,10 +43,23 @@ CLOUDINARY_ENABLED = all([
 ])
 
 if CLOUDINARY_ENABLED:
+    # Strict sanitization
+    c_cloud = os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip().replace('"', '').replace("'", "")
+    c_key = os.environ.get('CLOUDINARY_API_KEY', '').strip().replace('"', '').replace("'", "")
+    c_secret = os.environ.get('CLOUDINARY_API_SECRET', '').strip().replace('"', '').replace("'", "")
+
+    # Ensure API Key is digits only (common error is pasting 'Key=' or similar)
+    if not c_key.isdigit():
+        print(f"[WARNING] API Key contains non-digits: '{c_key}'. Attempting to extract digits.")
+        c_key = "".join(filter(str.isdigit, c_key))
+        print(f"[INFO] New API Key: '{c_key}'")
+
+    print(f"[DEBUG] Configured Cloudinary: Cloud={c_cloud}, Key={c_key[:4]}***{c_key[-4:] if len(c_key)>4 else ''}")
+
     cloudinary.config(
-        cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip().replace('"', '').replace("'", ""),
-        api_key=os.environ.get('CLOUDINARY_API_KEY', '').strip().replace('"', '').replace("'", ""),
-        api_secret=os.environ.get('CLOUDINARY_API_SECRET', '').strip().replace('"', '').replace("'", "")
+        cloud_name=c_cloud,
+        api_key=c_key,
+        api_secret=c_secret
     )
 
 db = SQLAlchemy(app)
