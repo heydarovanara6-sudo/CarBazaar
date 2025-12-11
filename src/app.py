@@ -479,7 +479,7 @@ def debug_cloudinary():
         "cloud_name": config.cloud_name,
         "api_key_masked": f"{config.api_key[:4]}***{config.api_key[-4:]}" if config.api_key and len(config.api_key) > 8 else "INVALID/SHORT",
         "api_key_length": len(config.api_key) if config.api_key else 0,
-        "api_secret_set": bool(config.api_secret),
+        "api_secret_masked": f"{config.api_secret[:4]}...{config.api_secret[-4:]}" if config.api_secret and len(config.api_secret) > 8 else "Not Set/Short",
         "connection_test": conn_status,
         "error_details": error_details,
         "env_var_raw_cloud": os.environ.get('CLOUDINARY_CLOUD_NAME', 'NOT_SET'),
