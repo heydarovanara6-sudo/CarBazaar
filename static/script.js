@@ -146,7 +146,9 @@ document.addEventListener('DOMContentLoaded', () => {
     applyClientFilters(); // Initial run to set visibility
 
 
-    document.getElementById('sellBtn')?.addEventListener('click', (e) => { e.preventDefault(); openModal('sellModal'); });
+    document.querySelectorAll('[data-sell-btn]').forEach(btn => {
+        btn.addEventListener('click', (e) => { e.preventDefault(); openModal('sellModal'); });
+    });
     document.getElementById('loginBtn')?.addEventListener('click', (e) => { e.preventDefault(); openModal('authModal'); setAuthMode('login'); });
     document.getElementById('registerBtn')?.addEventListener('click', (e) => { e.preventDefault(); openModal('authModal'); setAuthMode('register'); });
 
