@@ -43,10 +43,23 @@ CLOUDINARY_ENABLED = all([
 ])
 
 if CLOUDINARY_ENABLED:
+    # Strict sanitization
+    c_cloud = os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip().replace('"', '').replace("'", "")
+    c_key = os.environ.get('CLOUDINARY_API_KEY', '').strip().replace('"', '').replace("'", "")
+    c_secret = os.environ.get('CLOUDINARY_API_SECRET', '').strip().replace('"', '').replace("'", "")
+
+    # Ensure API Key is digits only (common error is pasting 'Key=' or similar)
+    if not c_key.isdigit():
+        print(f"[WARNING] API Key contains non-digits: '{c_key}'. Attempting to extract digits.")
+        c_key = "".join(filter(str.isdigit, c_key))
+        print(f"[INFO] New API Key: '{c_key}'")
+
+    print(f"[DEBUG] Configured Cloudinary: Cloud={c_cloud}, Key={c_key[:4]}***{c_key[-4:] if len(c_key)>4 else ''}")
+
     cloudinary.config(
-        cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip(),
-        api_key=os.environ.get('CLOUDINARY_API_KEY', '').strip(),
-        api_secret=os.environ.get('CLOUDINARY_API_SECRET', '').strip()
+        cloud_name=c_cloud,
+        api_key=c_key,
+        api_secret=c_secret
     )
 
 db = SQLAlchemy(app)
@@ -304,7 +317,16 @@ def add_car():
     print(f"[DEBUG] File received: {file.filename if file else 'None'}")
     
     if file and file.filename:
-        if CLOUDINARY_ENABLED:
+        # Robustness: Check file size and reset pointer
+        file.seek(0, os.SEEK_END)
+        file_length = file.tell()
+        file.seek(0)
+        print(f"[DEBUG] File size: {file_length} bytes")
+
+        if file_length == 0:
+            print("[WARNING] File is empty used 0 bytes")
+            flash("Uploaded file is empty!", "warning")
+        elif CLOUDINARY_ENABLED:
             try:
                 # Upload to Cloudinary
                 print(f"[DEBUG] Uploading to Cloudinary...")
@@ -433,6 +455,36 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@app.route("/debug/cloudinary")
+def debug_cloudinary():
+    """
+    Diagnostic route to verify Cloudinary configuration.
+    """
+    config = cloudinary.config()
+    
+    # Test connection
+    conn_status = "Unknown"
+    error_details = None
+    try:
+        # api.ping() is not always available, try listing resources (limit 1) or usage
+        # usage() is a good admin API test
+        cloudinary.api.usage()
+        conn_status = "Success"
+    except Exception as e:
+        conn_status = "Failed"
+        error_details = str(e)
+
+    return {
+        "cloud_name": config.cloud_name,
+        "api_key_masked": f"{config.api_key[:4]}***{config.api_key[-4:]}" if config.api_key and len(config.api_key) > 8 else "INVALID/SHORT",
+        "api_key_length": len(config.api_key) if config.api_key else 0,
+        "api_secret_masked": f"{config.api_secret[:4]}...{config.api_secret[-4:]}" if config.api_secret and len(config.api_secret) > 8 else "Not Set/Short",
+        "connection_test": conn_status,
+        "error_details": error_details,
+        "env_var_raw_cloud": os.environ.get('CLOUDINARY_CLOUD_NAME', 'NOT_SET'),
+        "env_var_raw_key_len": len(os.environ.get('CLOUDINARY_API_KEY', '')),
+    }
 
 # Create tables if they don't exist (for tests and first run)
 with app.app_context():
