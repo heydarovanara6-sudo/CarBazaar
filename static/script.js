@@ -5,7 +5,7 @@ let visibleCount = 6;
 const loadIncrement = 6;
 
 function updateVisibleCars() {
-    const cards = document.querySelectorAll('#carGrid .card');
+    const cards = document.querySelectorAll('#carFlex .card');
     // Consider currently filtered cards only if we combine with filters, 
     // but for now let's just do simple pagination on the DOM list.
     // Actually, it interacts with filters. 
@@ -38,7 +38,7 @@ function applyClientFilters() {
     const currencyVal = (document.getElementById('currencyFilter')?.value || '').trim();
     const minVal = parseFloat(document.getElementById('priceMin')?.value || '0') || 0;
     const maxVal = parseFloat(document.getElementById('priceMax')?.value || '999999999') || 999999999;
-    const cards = document.querySelectorAll('#carGrid .card');
+    const cards = document.querySelectorAll('#carFlex .card');
 
     let visibleMatches = 0;
     let totalMatches = 0;
