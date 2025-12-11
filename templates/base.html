@@ -163,12 +163,9 @@
                     </div>
                 </div>
                 <div class="form-row">
-                    <label>Photos</label>
-                    <div class="note"
-                        style="padding: 10px; background: #f0f9ff; border-radius: 6px; color: #0c4a6e; font-size: 0.9rem;">
-                        <i class="fa-solid fa-camera" style="margin-right: 6px;"></i>
-                        We'll automatically find a high-quality photo of this car from Unsplash!
-                    </div>
+                    <label>Photos (First one will be used)</label>
+                    <input name="images" id="imageInput" type="file" accept="image/*">
+                    <div id="imagePreview" class="preview-grid"></div>
                 </div>
                 <button type="submit" class="btn full">Submit Listing</button>
             </form>

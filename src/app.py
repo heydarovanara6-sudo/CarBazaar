@@ -33,39 +33,53 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_timeout": 20,
 }
 
-# Unsplash Configuration
-UNSPLASH_ACCESS_KEY = os.environ.get('UNSPLASH_ACCESS_KEY')
+# Imgur Configuration
+# ImgBB Configuration
+IMGBB_API_KEY = os.environ.get('IMGBB_API_KEY')
 
-if not UNSPLASH_ACCESS_KEY:
-    print("[WARNING] UNSPLASH_ACCESS_KEY not set. Image fetching will fail (or use placeholders).")
+if not IMGBB_API_KEY:
+    print("[WARNING] IMGBB_API_KEY not set. Uploads will fail.")
 
-def fetch_unsplash_image(query):
+def upload_to_imgbb(file_storage):
     """
-    Search Unsplash for a photo matching the query.
-    Returns the URL of the first result, or None.
+    Upload a file to ImgBB.
+    Returns the URL of the uploaded image, or None.
     """
-    if not UNSPLASH_ACCESS_KEY:
-        print("[DEBUG] Unsplash key missing, returning None.")
+    if not IMGBB_API_KEY:
+        print("[DEBUG] ImgBB API Key missing.")
         return None
         
-    url = "https://api.unsplash.com/search/photos"
-    params = {
-        "query": query,
-        "page": 1,
-        "per_page": 1,
-        "orientation": "landscape",
-        "client_id": UNSPLASH_ACCESS_KEY
+    url = "https://api.imgbb.com/1/upload"
+    payload = {
+        "key": IMGBB_API_KEY,
     }
     
     try:
-        response = requests.get(url, params=params, timeout=5)
+        # Read file content
+        file_storage.seek(0)
+        file_content = file_storage.read()
+        
+        # ImgBB expects 'image' form field
+        files = {
+            "image": file_content
+        }
+        
+        response = requests.post(
+            url, 
+            data=payload, 
+            files=files,
+            timeout=30
+        )
         response.raise_for_status()
         data = response.json()
-        if data['results']:
-            # return regular size
-            return data['results'][0]['urls']['regular']
+        
+        if data.get('success'):
+            return data['data']['url']
+        else:
+            print(f"[ERROR] ImgBB upload failed: {data}")
+            
     except Exception as e:
-        print(f"[ERROR] Unsplash API error: {e}")
+        print(f"[ERROR] ImgBB API error: {e}")
     
     return None
 
@@ -315,21 +329,21 @@ def add_car():
     city = request.form.get("city")
     currency = request.form.get("currency")
     
-    # Handle Image - Fetch from Unsplash
-    # We construct a query like "BMW X5 car"
-    search_query = f"{brand} {model} car"
-    print(f"[DEBUG] Fetching Unsplash image for: {search_query}")
+    # Handle Image - Upload to Imgur
+    file = request.files.get('images')
+    image_url = None
     
-    image_url = fetch_unsplash_image(search_query)
-    
-    if image_url:
-        flash("Found a beautiful image for your car!", "success")
+    if file and file.filename:
+        print(f"[DEBUG] Uploading file: {file.filename}")
+        image_url = upload_to_imgbb(file)
+        
+        if image_url:
+            flash("Image uploaded successfully!", "success")
+        else:
+            flash("Image upload failed. Check logs.", "error")
     else:
-        print("[WARNING] Could not fetch image from Unsplash.")
-        # We can leave image_url as None, the frontend or model has a placeholder fallback?
-        # Model property 'images' returns placeholder if None.
-        # But let's be explicit if we want.
-        flash("Could not auto-find an image, using placeholder.", "warning")
+        print("[DEBUG] No image file provided")
+
 
     new_car = Car(
         brand=brand,
