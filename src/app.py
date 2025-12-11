@@ -44,9 +44,9 @@ CLOUDINARY_ENABLED = all([
 
 if CLOUDINARY_ENABLED:
     cloudinary.config(
-        cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip(),
-        api_key=os.environ.get('CLOUDINARY_API_KEY', '').strip(),
-        api_secret=os.environ.get('CLOUDINARY_API_SECRET', '').strip()
+        cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip().replace('"', '').replace("'", ""),
+        api_key=os.environ.get('CLOUDINARY_API_KEY', '').strip().replace('"', '').replace("'", ""),
+        api_secret=os.environ.get('CLOUDINARY_API_SECRET', '').strip().replace('"', '').replace("'", "")
     )
 
 db = SQLAlchemy(app)
