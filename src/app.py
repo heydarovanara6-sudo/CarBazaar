@@ -6,9 +6,7 @@ import urllib.request
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+import requests
 from dotenv import load_dotenv
 
 # Load environment variables from .env file (for local development)
@@ -35,32 +33,58 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_timeout": 20,
 }
 
-# Configure Cloudinary (optional - only if credentials are provided)
-CLOUDINARY_ENABLED = all([
-    os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    os.environ.get('CLOUDINARY_API_KEY'),
-    os.environ.get('CLOUDINARY_API_SECRET')
-])
+# Imgur Configuration
+# ImgBB Configuration
+def upload_to_imgbb(file_storage):
+    """
+    Upload a file to ImgBB.
+    Returns (url, error_message).
+    """
+    # Fetch at runtime to ensure we get the latest env var
+    api_key = os.environ.get('IMGBB_API_KEY')
+    
+    if not api_key:
+        # Debugging: Print keys to see if we have a typo (safe, prompt only shows keys)
+        print(f"[DEBUG] API Key missing. Env keys: {list(os.environ.keys())}") 
+        return None, "ImgBB API Key missing from configuration"
+        
+    url = "https://api.imgbb.com/1/upload"
+    payload = {
+        "key": api_key,
+    }
+    
+    try:
+        # Read file content
+        file_storage.seek(0)
+        file_content = file_storage.read()
+        
+        # ImgBB expects 'image' form field
+        files = {
+            "image": file_content
+        }
+        
+        response = requests.post(
+            url, 
+            data=payload, 
+            files=files,
+            timeout=30
+        )
+        
+        try:
+            data = response.json()
+        except:
+             return None, f"Invalid JSON response: {response.text[:100]}"
 
-if CLOUDINARY_ENABLED:
-    # Strict sanitization
-    c_cloud = os.environ.get('CLOUDINARY_CLOUD_NAME', '').strip().replace('"', '').replace("'", "")
-    c_key = os.environ.get('CLOUDINARY_API_KEY', '').strip().replace('"', '').replace("'", "")
-    c_secret = os.environ.get('CLOUDINARY_API_SECRET', '').strip().replace('"', '').replace("'", "")
+        if response.status_code == 200 and data.get('success'):
+            return data['data']['url'], None
+        else:
+            error_msg = data.get('error', {}).get('message', 'Unknown ImgBB error')
+            return None, f"ImgBB Error: {error_msg}"
+            
+    except Exception as e:
+        return None, f"Upload Exception: {str(e)}"
 
-    # Ensure API Key is digits only (common error is pasting 'Key=' or similar)
-    if not c_key.isdigit():
-        print(f"[WARNING] API Key contains non-digits: '{c_key}'. Attempting to extract digits.")
-        c_key = "".join(filter(str.isdigit, c_key))
-        print(f"[INFO] New API Key: '{c_key}'")
 
-    print(f"[DEBUG] Configured Cloudinary: Cloud={c_cloud}, Key={c_key[:4]}***{c_key[-4:] if len(c_key)>4 else ''}")
-
-    cloudinary.config(
-        cloud_name=c_cloud,
-        api_key=c_key,
-        api_secret=c_secret
-    )
 
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -308,51 +332,22 @@ def add_car():
     city = request.form.get("city")
     currency = request.form.get("currency")
     
-    # Handle Image - Upload to Cloudinary (if configured)
+    # Handle Image - Upload to ImgBB
     file = request.files.get('images')
     image_url = None
-    
-    # Debug logging
-    print(f"[DEBUG] CLOUDINARY_ENABLED: {CLOUDINARY_ENABLED}")
-    print(f"[DEBUG] File received: {file.filename if file else 'None'}")
+    upload_error = None
     
     if file and file.filename:
-        # Robustness: Check file size and reset pointer
-        file.seek(0, os.SEEK_END)
-        file_length = file.tell()
-        file.seek(0)
-        print(f"[DEBUG] File size: {file_length} bytes")
-
-        if file_length == 0:
-            print("[WARNING] File is empty used 0 bytes")
-            flash("Uploaded file is empty!", "warning")
-        elif CLOUDINARY_ENABLED:
-            try:
-                # Upload to Cloudinary
-                print(f"[DEBUG] Uploading to Cloudinary...")
-                upload_result = cloudinary.uploader.upload(
-                    file,
-                    folder="carbazaar",
-                    resource_type="image"
-                )
-                image_url = upload_result.get('secure_url')
-                print(f"[DEBUG] Upload successful! URL: {image_url}")
-                flash(f"Image uploaded successfully! URL: {image_url}", "success")
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
-                error_msg = f"Cloudinary Upload Error: {str(e)}"
-                print(f"[ERROR] {error_msg}")
-                flash(error_msg, "error")
-                # Don't return - still save the car without image But wait
-                # If we want to debug, we should probably stop? No, let's let it save so we see if the car appears.
+        print(f"[DEBUG] Uploading file: {file.filename}")
+        image_url, upload_error = upload_to_imgbb(file)
+        
+        if image_url:
+            flash("Image uploaded successfully!", "success")
         else:
-            # Cloudinary not configured - skip image upload
-            print("[WARNING] Cloudinary not configured. Check Env Vars.")
-            flash("Cloudinary not configured. Check CLOUDINARY_CLOUD_NAME, _API_KEY, _API_SECRET", "warning")
+            flash(f"Image upload failed: {upload_error}", "error")
     else:
-        print("[DEBUG] No image file provided or filename empty")
-        flash("No image selected!", "warning")
+        print("[DEBUG] No image file provided")
+
 
     new_car = Car(
         brand=brand,
@@ -456,35 +451,7 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route("/debug/cloudinary")
-def debug_cloudinary():
-    """
-    Diagnostic route to verify Cloudinary configuration.
-    """
-    config = cloudinary.config()
-    
-    # Test connection
-    conn_status = "Unknown"
-    error_details = None
-    try:
-        # api.ping() is not always available, try listing resources (limit 1) or usage
-        # usage() is a good admin API test
-        cloudinary.api.usage()
-        conn_status = "Success"
-    except Exception as e:
-        conn_status = "Failed"
-        error_details = str(e)
 
-    return {
-        "cloud_name": config.cloud_name,
-        "api_key_masked": f"{config.api_key[:4]}***{config.api_key[-4:]}" if config.api_key and len(config.api_key) > 8 else "INVALID/SHORT",
-        "api_key_length": len(config.api_key) if config.api_key else 0,
-        "api_secret_masked": f"{config.api_secret[:4]}...{config.api_secret[-4:]}" if config.api_secret and len(config.api_secret) > 8 else "Not Set/Short",
-        "connection_test": conn_status,
-        "error_details": error_details,
-        "env_var_raw_cloud": os.environ.get('CLOUDINARY_CLOUD_NAME', 'NOT_SET'),
-        "env_var_raw_key_len": len(os.environ.get('CLOUDINARY_API_KEY', '')),
-    }
 
 # Create tables if they don't exist (for tests and first run)
 with app.app_context():
