@@ -45,18 +45,9 @@
                     <div class="spec"><span>Seller</span><strong>{{ car.owner.username if car.owner else 'Official'
                             }}</strong></div>
                 </div>
-                <div class="seller-card">
-                    <div>
-                        <p class="muted">Seller</p>
-                        <h3>{{ car.owner.username if car.owner else 'Official Dealer' }}</h3>
-                        <p class="seller-meta">Location: {{ car.city }}</p>
-                    </div>
-                    <a href="{{ url_for('my_ads') if current_user.is_authenticated else url_for('login') }}"
-                        class="seller-link">{{ 'Manage ads' if current_user.is_authenticated else 'See more cars' }}</a>
-                </div>
                 <div class="actions">
                     <button class="btn full"><i class="fa-solid fa-phone"></i> Contact seller (demo)</button>
-                    <a class="btn ghost full" href="{{ url_for('index') }}"><i class="fa-solid fa-arrow-left"></i> Back
+                    <a class="btn ghost " href="{{ url_for('index') }}"><i class="fa-solid fa-arrow-left"></i> Back
                         to listings</a>
                 </div>
                 <div class="detail-assurance">

@@ -9,43 +9,55 @@
 {% endfor %}
 
 <section class="filters" id="filters">
-    <div
-        style="background-color: #d1fae5; color: #065f46; padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 20px; font-weight: bold;">
+    <div class="filters-header">
+        <div class="filters-heading">
+            <p class="filters-kicker">Smart search</p>
+            <h3>Fine-tune the listings</h3>
+            <p>Combine brand, price, currency and city filters to find the exact car you have in mind.</p>
+        </div>
+        <div class="filters-badges">
+            <span class="filters-badge accent">⚡ Instant updates</span>
+            <span class="filters-badge">✨ Seamless experience</span>
+        </div>
+    </div>
+    <div class="filters-announcement">
         🚀 Validated on Render!
     </div>
-    <div class="filter-group">
-        <label for="brandFilter">Brand</label>
-        <select id="brandFilter">
-            <option value="">Any</option>
-            {% for b in brand_options %}
-            <option value="{{ b|lower }}">{{ b }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="filter-group">
-        <label for="priceMin">Price from</label>
-        <input id="priceMin" type="number" min="0" placeholder="0">
-    </div>
-    <div class="filter-group">
-        <label for="priceMax">Price to</label>
-        <input id="priceMax" type="number" min="0" placeholder="100000">
-    </div>
-    <div class="filter-group">
-        <label for="currencyFilter">Currency</label>
-        <select id="currencyFilter">
-            <option value="">Any</option>
-            <option value="AZN">AZN</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-        </select>
-    </div>
-    <div class="filter-group">
-        <label for="cityFilter">City</label>
-        <input id="cityFilter" type="text" placeholder="e.g. Baku">
-    </div>
-    <div class="filter-actions">
-        <button id="applyFilters" class="btn small">Show listings</button>
-        <button id="resetFilters" class="btn small ghost">Reset</button>
+    <div class="filters-grid">
+        <div class="filter-group">
+            <label for="brandFilter">Brand</label>
+            <select id="brandFilter">
+                <option value="">Any</option>
+                {% for b in brand_options %}
+                <option value="{{ b|lower }}">{{ b }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="priceMin">Price from</label>
+            <input id="priceMin" type="number" min="0" placeholder="0">
+        </div>
+        <div class="filter-group">
+            <label for="priceMax">Price to</label>
+            <input id="priceMax" type="number" min="0" placeholder="100000">
+        </div>
+        <div class="filter-group">
+            <label for="currencyFilter">Currency</label>
+            <select id="currencyFilter">
+                <option value="">Any</option>
+                <option value="AZN">AZN</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="cityFilter">City</label>
+            <input id="cityFilter" type="text" placeholder="e.g. Baku">
+        </div>
+        <div class="filter-actions">
+            <button id="applyFilters" class="btn small">Show listings</button>
+            <button id="resetFilters" class="btn small ghost">Reset</button>
+        </div>
     </div>
 </section>
 
