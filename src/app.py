@@ -456,6 +456,36 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route("/debug/cloudinary")
+def debug_cloudinary():
+    """
+    Diagnostic route to verify Cloudinary configuration.
+    """
+    config = cloudinary.config()
+    
+    # Test connection
+    conn_status = "Unknown"
+    error_details = None
+    try:
+        # api.ping() is not always available, try listing resources (limit 1) or usage
+        # usage() is a good admin API test
+        cloudinary.api.usage()
+        conn_status = "Success"
+    except Exception as e:
+        conn_status = "Failed"
+        error_details = str(e)
+
+    return {
+        "cloud_name": config.cloud_name,
+        "api_key_masked": f"{config.api_key[:4]}***{config.api_key[-4:]}" if config.api_key and len(config.api_key) > 8 else "INVALID/SHORT",
+        "api_key_length": len(config.api_key) if config.api_key else 0,
+        "api_secret_set": bool(config.api_secret),
+        "connection_test": conn_status,
+        "error_details": error_details,
+        "env_var_raw_cloud": os.environ.get('CLOUDINARY_CLOUD_NAME', 'NOT_SET'),
+        "env_var_raw_key_len": len(os.environ.get('CLOUDINARY_API_KEY', '')),
+    }
+
 # Create tables if they don't exist (for tests and first run)
 with app.app_context():
     db.create_all()
