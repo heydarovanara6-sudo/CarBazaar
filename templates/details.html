@@ -1,50 +1,70 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="detail-shell" style="margin-top: 20px;">
-    <div class="detail-grid">
-        <div class="detail-gallery">
-            <div class="main-image">
-                <img id="mainImage" src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}"
-                    onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
+<section class="details-page">
+    <div class="detail-shell">
+        <div class="detail-header">
+            <div>
+                <p class="detail-eyebrow">View details</p>
+                <h1>{{ car.brand }} {{ car.model }}</h1>
+                <p class="detail-meta">{{ car.year }} • {{ car.engine }}L • {{ car.city }}</p>
             </div>
-            {% if car.images|length > 1 %}
-            <div class="thumbs">
-                {% for img in car.images %}
-                <img class="thumb" data-src="{{ img }}" src="{{ img }}" alt="thumb"
-                    onerror="this.src='https://via.placeholder.com/120x90?text=No+Image'">
-                {% endfor %}
+            <div class="detail-price-badge">
+                <span>Price</span>
+                <strong>{{ car.price }} {{ car.currency }}</strong>
+                <p>Views: {{ car.views|default(0) }}</p>
             </div>
-            {% endif %}
         </div>
 
-        <div class="detail-card">
-            <div class="price-line">
-                <div>
-                    <div class="price-big">{{ car.price }} {{ car.currency }}</div>
-                    <div class="subtitle">{{ car.brand }} • {{ car.model }}</div>
+        <div class="detail-grid">
+            <div class="detail-gallery">
+                <div class="main-image">
+                    <img id="mainImage" src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}"
+                        onerror="this.src='https://via.placeholder.com/800x600?text=No+Image'">
                 </div>
-                <div class="chips">
+                {% if car.images|length > 1 %}
+                <div class="thumbs">
+                    {% for img in car.images %}
+                    <img class="thumb" data-src="{{ img }}" src="{{ img }}" alt="thumb"
+                        onerror="this.src='https://via.placeholder.com/120x90?text=No+Image'">
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="detail-card">
+                <div class="detail-tags">
                     <span class="chip">{{ car.year }}</span>
                     <span class="chip">{{ car.city }}</span>
-                    <span class="chip soft">Views: {{ car.views|default(0) }}</span>
+                    <span class="chip soft">Currency {{ car.currency }}</span>
                 </div>
-            </div>
-
-            <div class="spec-grid">
-                <div class="spec"><span>Engine</span><strong>{{ car.engine }} L</strong></div>
-                <div class="spec"><span>Mileage</span><strong>{{ car.odometer }} km</strong></div>
-                <div class="spec"><span>Posted</span><strong>{{ car.dates }}</strong></div>
-                <div class="spec"><span>Currency</span><strong>{{ car.currency }}</strong></div>
-                <div class="spec"><span>Seller</span><strong>{{ car.owner.username if car.owner else 'Official'
-                        }}</strong></div>
-            </div>
-
-            <div class="actions">
-                <button class="btn full"><i class="fa-solid fa-phone"></i> Contact seller (demo)</button>
-                <a class="btn ghost full" href="{{ url_for('index') }}"><i class="fa-solid fa-arrow-left"></i> Back</a>
+                <div class="spec-grid">
+                    <div class="spec"><span>Engine</span><strong>{{ car.engine }} L</strong></div>
+                    <div class="spec"><span>Mileage</span><strong>{{ car.odometer }} km</strong></div>
+                    <div class="spec"><span>Posted</span><strong>{{ car.dates }}</strong></div>
+                    <div class="spec"><span>Seller</span><strong>{{ car.owner.username if car.owner else 'Official'
+                            }}</strong></div>
+                </div>
+                <div class="seller-card">
+                    <div>
+                        <p class="muted">Seller</p>
+                        <h3>{{ car.owner.username if car.owner else 'Official Dealer' }}</h3>
+                        <p class="seller-meta">Location: {{ car.city }}</p>
+                    </div>
+                    <a href="{{ url_for('my_ads') if current_user.is_authenticated else url_for('login') }}"
+                        class="seller-link">{{ 'Manage ads' if current_user.is_authenticated else 'See more cars' }}</a>
+                </div>
+                <div class="actions">
+                    <button class="btn full"><i class="fa-solid fa-phone"></i> Contact seller (demo)</button>
+                    <a class="btn ghost full" href="{{ url_for('index') }}"><i class="fa-solid fa-arrow-left"></i> Back
+                        to listings</a>
+                </div>
+                <div class="detail-assurance">
+                    <i class="fa-solid fa-shield"></i>
+                    <p>CarBazaar tip: verify the VIN, maintenance history and meet in public places for test drives.</p>
+                </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 {% endblock %}
