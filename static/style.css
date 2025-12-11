@@ -160,13 +160,28 @@ main {
     border: 1px solid #e5e7eb;
 }
 
-.grid {
+/* .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 2.5rem;
+} */
+
+.carFlex {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.carCard {
+    text-decoration: none;
+    /* mövcudu saxlayırıq */
 }
 
 .card {
+    width: 315px;
     background: white;
     border-radius: 1.8rem;
     overflow: hidden;
