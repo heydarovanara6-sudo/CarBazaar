@@ -1,8 +1,8 @@
 // Simple client-side interactions for filters, auth modal, and sell modal.
 
 // Load More Logic
-let visibleCount = 6;
-const loadIncrement = 6;
+let visibleCount = 8;
+const loadIncrement = 8;
 
 function updateVisibleCars() {
     const cards = document.querySelectorAll('#carFlex .card');
