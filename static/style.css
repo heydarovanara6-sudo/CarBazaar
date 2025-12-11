@@ -579,14 +579,110 @@ main {
 }
 
 .filters {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 1rem;
-    background: white;
-    padding: 1.25rem;
-    border-radius: 1rem;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
+    background: linear-gradient(134deg, rgba(255, 255, 255, 0.95), rgba(236, 233, 255, 0.9));
+    padding: 2rem;
+    border-radius: 1.75rem;
+    box-shadow: 0 25px 60px rgba(124, 58, 237, 0.15);
+    overflow: hidden;
     margin-bottom: 2rem;
+}
+
+.filters::before,
+.filters::after {
+    content: "";
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 999px;
+    filter: blur(60px);
+    opacity: 0.45;
+}
+
+.filters::before {
+    background: rgba(236, 72, 153, 0.4);
+    top: -80px;
+    right: -60px;
+}
+
+.filters::after {
+    background: rgba(14, 165, 233, 0.3);
+    bottom: -100px;
+    left: -80px;
+}
+
+.filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
+}
+
+.filters-heading h3 {
+    margin: 0.35rem 0 0.4rem;
+    font-size: 1.8rem;
+    color: #111827;
+}
+
+.filters-heading p {
+    margin: 0;
+    color: #4b5563;
+    max-width: 520px;
+    line-height: 1.5;
+}
+
+.filters-kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-size: 0.85rem;
+    color: var(--purple-700);
+    font-weight: 700;
+    margin: 0;
+}
+
+.filters-badges {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+.filters-badge {
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(124, 58, 237, 0.08);
+    color: var(--purple-700);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid rgba(124, 58, 237, 0.25);
+}
+
+.filters-badge.accent {
+    background: rgba(16, 185, 129, 0.15);
+    color: #047857;
+    border-color: rgba(16, 185, 129, 0.25);
+}
+
+.filters-announcement {
+    position: relative;
+    z-index: 1;
+    margin: 1.2rem 0;
+    padding: 0.85rem 1.1rem;
+    border-radius: 1.2rem;
+    background: rgba(16, 185, 129, 0.12);
+    color: #065f46;
+    font-weight: 600;
+    text-align: center;
+}
+
+.filters-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1.25rem;
 }
 
 .filter-group {
@@ -597,25 +693,46 @@ main {
     color: #4b5563;
 }
 
+.filter-group label {
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
 .filter-group input {
     padding: 0.7rem 0.9rem;
-    border-radius: 0.6rem;
-    border: 1px solid #e5e7eb;
+    border-radius: 0.9rem;
+    border: 1px solid rgba(107, 114, 128, 0.25);
     font-size: 1rem;
+    background: rgba(255, 255, 255, 0.85);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .filter-group select {
     padding: 0.7rem 0.9rem;
-    border-radius: 0.6rem;
-    border: 1px solid #e5e7eb;
+    border-radius: 0.9rem;
+    border: 1px solid rgba(107, 114, 128, 0.25);
     font-size: 1rem;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.85);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    border-color: var(--purple-600);
+    box-shadow: 0 10px 25px rgba(124, 58, 237, 0.15);
+    outline: none;
+    transform: translateY(-2px);
 }
 
 .filter-actions {
     display: flex;
-    gap: 0.5rem;
-    align-items: flex-end;
+    gap: 0.6rem;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    grid-column: span 2;
 }
 
 .btn.small {
@@ -627,9 +744,29 @@ main {
 }
 
 .btn.small.ghost {
-    background: white;
+    background: rgba(255, 255, 255, 0.9);
     color: var(--purple-700);
-    border: 1px solid #e5e7eb;
+    border: 1px solid rgba(124, 58, 237, 0.3);
+}
+
+@media (max-width: 600px) {
+    .filters {
+        padding: 1.5rem;
+    }
+
+    .filters-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .filter-actions {
+        justify-content: flex-start;
+        grid-column: span 1;
+    }
+
+    .filters-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
 }
 
 .carFlex {
