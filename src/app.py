@@ -117,7 +117,7 @@ class Car(db.Model):
     engine = db.Column(db.Float, default=0.0)
     odometer = db.Column(db.Integer, default=0)
     city = db.Column(db.String(50), default='Baku')
-    image_url = db.Column(db.String(500)) # Store Cloudinary URL
+    image_url = db.Column(db.String(500)) # Store Image URL (External)
     views = db.Column(db.Integer, default=0)
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -332,21 +332,21 @@ def add_car():
     city = request.form.get("city")
     currency = request.form.get("currency")
     
-    # Handle Image - Upload to ImgBB
-    file = request.files.get('images')
+    # Handle Image - Upload to ImgBB (Disabled for now per user request)
+    # file = request.files.get('images')
     image_url = None
     upload_error = None
     
-    if file and file.filename:
-        print(f"[DEBUG] Uploading file: {file.filename}")
-        image_url, upload_error = upload_to_imgbb(file)
-        
-        if image_url:
-            flash("Image uploaded successfully!", "success")
-        else:
-            flash(f"Image upload failed: {upload_error}", "error")
-    else:
-        print("[DEBUG] No image file provided")
+    # if file and file.filename:
+    #     print(f"[DEBUG] Uploading file: {file.filename}")
+    #     image_url, upload_error = upload_to_imgbb(file)
+    #     
+    #     if image_url:
+    #         flash("Image uploaded successfully!", "success")
+    #     else:
+    #         flash(f"Image upload failed: {upload_error}", "error")
+    # else:
+    #     print("[DEBUG] No image file provided")
 
 
     new_car = Car(
@@ -367,10 +367,11 @@ def add_car():
     
     print(f"[DEBUG] Car saved to DB with ID: {new_car.id}, Image URL: {new_car.image_url}")
     
-    if image_url:
-        flash(f"Car added successfully with image!", "success")
-    else:
-        flash(f"Car added successfully (no image uploaded)", "info")
+    flash(f"Car added successfully (local placeholder only)", "info")
+    # if image_url:
+    #     flash(f"Car added successfully with image!", "success")
+    # else:
+    #     flash(f"Car added successfully (no image uploaded)", "info")
     return redirect(url_for('index'))
 
 @app.route("/my_ads")

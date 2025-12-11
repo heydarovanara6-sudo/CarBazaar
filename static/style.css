@@ -978,7 +978,8 @@ main {
 }
 
 .btn {
-    display: inline-block; /* inline-block is more flexible for buttons */
+    display: inline-block;
+    /* inline-block is more flexible for buttons */
     margin-top: 1.5rem;
     padding: 1rem 2rem;
     background: linear-gradient(45deg, var(--purple-500), var(--purple-700));
