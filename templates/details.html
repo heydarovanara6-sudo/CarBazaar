@@ -47,16 +47,7 @@
                 </div>
                 <div class="actions">
                     <button class="btn full"><i class="fa-solid fa-phone"></i> Contact seller (demo)</button>
-                    {% if current_user.is_authenticated and car.owner %}
-                    <form action="{{ url_for('toggle_favorite', car_id=car.id) }}" method="POST">
-                        <button type="submit" class="btn full ghost"
-                            style="margin-top: 0.5rem; border-color: var(--purple-600); color: var(--purple-600);">
-                            <i
-                                class="{{ 'fa-solid' if car in current_user.favorited_cars else 'fa-regular' }} fa-heart"></i>
-                            {{ 'Remove from Favorites' if car in current_user.favorited_cars else 'Add to Favorites' }}
-                        </button>
-                    </form>
-                    {% endif %}
+
                     <a class="btn ghost " href="{{ url_for('index') }}"><i class="fa-solid fa-arrow-left"></i> Back
                         to listings</a>
                 </div>
