@@ -490,10 +490,34 @@ def logout():
     return redirect(url_for('index'))
 
 
+from sqlalchemy import text
+from sqlalchemy.exc import OperationalError
+
+def run_migrations():
+    """Auto-migrate database schema changes for local dev."""
+    with app.app_context():
+        try:
+            # Add 'views' column if missing
+            with db.engine.connect() as conn:
+                conn.execute(text("ALTER TABLE car ADD COLUMN views INTEGER DEFAULT 0"))
+                conn.commit()
+            print("Migrated: Added 'views' column.")
+        except OperationalError:
+            pass # Column likely exists
+
+        try:
+            # Add 'contact_number' column if missing
+            with db.engine.connect() as conn:
+                conn.execute(text("ALTER TABLE car ADD COLUMN contact_number VARCHAR(20)"))
+                conn.commit()
+            print("Migrated: Added 'contact_number' column.")
+        except OperationalError:
+            pass # Column likely exists
 
 # Create tables if they don't exist (for tests and first run)
 with app.app_context():
     db.create_all()
+    run_migrations() # Run migrations on startup
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
