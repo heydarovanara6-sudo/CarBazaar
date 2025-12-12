@@ -126,7 +126,7 @@ class Car(db.Model):
     odometer = db.Column(db.Integer, default=0)
     city = db.Column(db.String(50), default='Baku')
     image_url = db.Column(db.String(500)) # Store Image URL (External)
-    contact_number = db.Column(db.String(20)) # Added contact number
+    contact_number = db.Column(db.String(50)) # Increased to 50 chars
     views = db.Column(db.Integer, default=0)
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -379,10 +379,15 @@ def add_car():
         owner=current_user
     )
     
-    db.session.add(new_car)
-    db.session.commit()
-    
-    print(f"[DEBUG] Car saved to DB with ID: {new_car.id}, Image URL: {new_car.image_url}")
+    try:
+        db.session.add(new_car)
+        db.session.commit()
+        print(f"[DEBUG] Car saved to DB with ID: {new_car.id}, Image URL: {new_car.image_url}")
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Failed to save car: {e}")
+        flash(f"Error saving car: {e}", "error")
+        return redirect(url_for('index'))
     
     if image_url:
         flash(f"Car added successfully with image!", "success")
@@ -508,7 +513,7 @@ def run_migrations():
         try:
             # Add 'contact_number' column if missing
             with db.engine.connect() as conn:
-                conn.execute(text("ALTER TABLE car ADD COLUMN contact_number VARCHAR(20)"))
+                conn.execute(text("ALTER TABLE car ADD COLUMN contact_number VARCHAR(50)"))
                 conn.commit()
             print("Migrated: Added 'contact_number' column.")
         except OperationalError:
