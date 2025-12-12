@@ -33,6 +33,7 @@
                         {% if current_user.is_authenticated %}
                         <span class="welcome-text">Welcome, {{ current_user.username }}</span>
                         <a href="#" class="nav-btn primary" data-sell-btn><i class="fa-solid fa-plus"></i> Sell Car</a>
+                        <a href="{{ url_for('favorites') }}" class="nav-btn ghost">Favorites</a>
                         <a href="{{ url_for('my_ads') }}" class="nav-btn ghost">My Ads</a>
                         <a href="{{ url_for('logout') }}" class="nav-btn ghost">Logout</a>
                         {% else %}
