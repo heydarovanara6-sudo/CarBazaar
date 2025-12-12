@@ -373,6 +373,7 @@ def add_car():
         engine=engine,
         odometer=odometer,
         city=city,
+        contact_number=contact_number, # Added contact number
         image_url=image_url,
         owner=current_user
     )

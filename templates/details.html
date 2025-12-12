@@ -46,7 +46,14 @@
                             }}</strong></div>
                 </div>
                 <div class="actions">
+                    {% if car.contact_number %}
+                    <button class="btn full"
+                        onclick="this.innerText = 'Call: {{ car.contact_number }}'; this.onclick=null;">
+                        <i class="fa-solid fa-phone"></i> Contact Seller
+                    </button>
+                    {% else %}
                     <button class="btn full"><i class="fa-solid fa-phone"></i> Contact seller (demo)</button>
+                    {% endif %}
                     <!-- Favorites Logic -->
                     {% if car.id is number %}
                     <!-- User Car: Functional -->
