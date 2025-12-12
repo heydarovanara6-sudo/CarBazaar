@@ -126,6 +126,7 @@ class Car(db.Model):
     odometer = db.Column(db.Integer, default=0)
     city = db.Column(db.String(50), default='Baku')
     image_url = db.Column(db.String(500)) # Store Image URL (External)
+    contact_number = db.Column(db.String(20)) # Added contact number
     views = db.Column(db.Integer, default=0)
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
