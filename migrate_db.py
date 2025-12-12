@@ -21,7 +21,19 @@ def migrate():
         if "duplicate column" in str(e):
              print("Column 'views' already exists.")
         else:
-            print(f"Error: {e}")
+            print(f"Error adding views: {e}")
+
+    try:
+        print("Attempting to add 'contact_number' column to 'car' table...")
+        cursor.execute("ALTER TABLE car ADD COLUMN contact_number VARCHAR(20)")
+        conn.commit()
+        print("Success: 'contact_number' column added.")
+    except sqlite3.OperationalError as e:
+        if "duplicate column" in str(e):
+             print("Column 'contact_number' already exists.")
+        else:
+            print(f"Error adding contact_number: {e}")
+
     finally:
         conn.close()
 
