@@ -336,6 +336,7 @@ def details(id):
 def add_car():
     brand = request.form.get("brand")
     model = request.form.get("model")
+    contact_number = request.form.get("contact_number")
     try:
         year = int(request.form.get("year"))
         price = int(request.form.get("price"))
