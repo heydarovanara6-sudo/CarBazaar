@@ -91,6 +91,12 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# Usage: Association Table for User-Car Favorites
+favorites = db.Table('favorites',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('car_id', db.Integer, db.ForeignKey('car.id'), primary_key=True)
+)
+
 # User Model
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -98,6 +104,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(150), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     cars = db.relationship('Car', backref='owner', lazy=True)
+    favorited_cars = db.relationship('Car', secondary=favorites, backref=db.backref('favorited_by', lazy='dynamic'))
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -296,7 +303,13 @@ def index():
     db_cars = Car.query.order_by(Car.date_posted.desc()).all()
     # Merge with demo cars (demo cars come after? or before? Let's put DB cars first)
     all_cars = list(db_cars) + list(CARS)
-    return render_template('index.html', cars=all_cars)
+    
+    # Pre-fetch favorites for efficiency
+    fav_ids = []
+    if current_user.is_authenticated:
+        fav_ids = [c.id for c in current_user.favorited_cars]
+        
+    return render_template('index.html', cars=all_cars, fav_ids=fav_ids)
 
 @app.route("/details/<id>")
 def details(id):
@@ -332,21 +345,21 @@ def add_car():
     city = request.form.get("city")
     currency = request.form.get("currency")
     
-    # Handle Image - Upload to ImgBB (Disabled for now per user request)
-    # file = request.files.get('images')
+    # Handle Image - Upload to ImgBB
+    file = request.files.get('images')
     image_url = None
     upload_error = None
     
-    # if file and file.filename:
-    #     print(f"[DEBUG] Uploading file: {file.filename}")
-    #     image_url, upload_error = upload_to_imgbb(file)
-    #     
-    #     if image_url:
-    #         flash("Image uploaded successfully!", "success")
-    #     else:
-    #         flash(f"Image upload failed: {upload_error}", "error")
-    # else:
-    #     print("[DEBUG] No image file provided")
+    if file and file.filename:
+        print(f"[DEBUG] Uploading file: {file.filename}")
+        image_url, upload_error = upload_to_imgbb(file)
+        
+        if image_url:
+            flash("Image uploaded successfully!", "success")
+        else:
+            flash(f"Image upload failed: {upload_error}", "error")
+    else:
+        print("[DEBUG] No image file provided")
 
 
     new_car = Car(
@@ -367,11 +380,10 @@ def add_car():
     
     print(f"[DEBUG] Car saved to DB with ID: {new_car.id}, Image URL: {new_car.image_url}")
     
-    flash(f"Car added successfully (local placeholder only)", "info")
-    # if image_url:
-    #     flash(f"Car added successfully with image!", "success")
-    # else:
-    #     flash(f"Car added successfully (no image uploaded)", "info")
+    if image_url:
+        flash(f"Car added successfully with image!", "success")
+    else:
+        flash(f"Car added successfully (no image uploaded)", "info")
     return redirect(url_for('index'))
 
 @app.route("/my_ads")
@@ -410,6 +422,26 @@ def delete_all_ads():
         flash(f"Error deleting ads: {str(e)}", "error")
         
     return redirect(url_for('my_ads'))
+
+@app.route("/toggle_favorite/<int:car_id>", methods=["POST"])
+@login_required
+def toggle_favorite(car_id):
+    car = Car.query.get_or_404(car_id)
+    if car in current_user.favorited_cars:
+        current_user.favorited_cars.remove(car)
+        flash("Removed from favorites", "info")
+    else:
+        current_user.favorited_cars.append(car)
+        flash("Added to favorites!", "success")
+    db.session.commit()
+    # Redirect back to the page the user came from, or index if unknown
+    return redirect(request.referrer or url_for('index'))
+
+@app.route("/favorites")
+@login_required
+def favorites():
+    cars = current_user.favorited_cars
+    return render_template('favorites.html', cars=cars)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():

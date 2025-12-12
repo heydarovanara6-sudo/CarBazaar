@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container" style="margin-top: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 class="section-title">My Favorites</h2>
+        <a href="{{ url_for('index') }}" class="btn ghost">Find more cars</a>
+    </div>
+
+    {% if cars %}
+    <div class="carFlex">
+        {% for car in cars %}
+        <div class="card">
+            <div class="card-image-container">
+                <img src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}" class="card-img"
+                    onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+                <div class="card-badge">{{ car.dates }}</div>
+            </div>
+            <div class="card-content">
+                <h3 class="card-title">{{ car.brand }} {{ car.model }}</h3>
+                <p class="card-details">{{ car.year }} • {{ car.engine }} L • {{ car.distance }} km</p>
+                <div class="card-cta">
+                    <p class="price">{{ car.price }} {{ car.currency }}</p>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <a href="{{ url_for('details', id=car.id) }}" class="btn small">View</a>
+                        <!-- Un-heart button -->
+                        <form action="{{ url_for('toggle_favorite', car_id=car.id) }}" method="POST"
+                            style="display:inline;">
+                            <button type="submit" class="btn small ghost"
+                                style="padding: 0.6rem 0.8rem; border-color: var(--purple-600); color: var(--purple-600);">
+                                <i class="fa-solid fa-heart"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div
+        style="text-align: center; padding: 4rem; background: #fff; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <i class="fa-regular fa-heart" style="font-size: 3rem; color: #d1d5db; margin-bottom: 1rem;"></i>
+        <p style="color: #6b7280; font-size: 1.1rem; margin-bottom: 1.5rem;">You haven't liked any cars yet.</p>
+        <a href="{{ url_for('index') }}" class="btn">Browse Cars</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

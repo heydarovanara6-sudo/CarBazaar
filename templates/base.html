@@ -32,7 +32,9 @@
                     <div class="auth-actions">
                         {% if current_user.is_authenticated %}
                         <span class="welcome-text">Welcome, {{ current_user.username }}</span>
-                        <a href="#" id="sellBtn" class="nav-btn primary" data-sell-btn>Add your car</a>
+                        <a href="{{ url_for('add_car') }}" class="nav-btn primary"><i class="fa-solid fa-plus"></i> Sell
+                            Car</a>
+                        <a href="{{ url_for('favorites') }}" class="nav-btn ghost">Favorites</a>
                         <a href="{{ url_for('my_ads') }}" class="nav-btn ghost">My Ads</a>
                         <a href="{{ url_for('logout') }}" class="nav-btn ghost">Logout</a>
                         {% else %}
@@ -97,11 +99,10 @@
     <main>
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="flashes" style="position: fixed; top: 100px; right: 20px; z-index: 10000; max-width: 400px;">
+        <div class="flashes">
             {% for category, message in messages %}
-            <div class="alert"
-                style="background: #fff; padding: 1rem; margin-bottom: 1rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-left: 5px solid {% if category == 'error' %}#ef4444{% elif category == 'success' %}#10b981{% else %}#3b82f6{% endif %};">
-                <p style="margin: 0; color: #333; font-weight: 500;">{{ message }}</p>
+            <div class="alert {{ category }}">
+                <p>{{ message }}</p>
             </div>
             {% endfor %}
         </div>
