@@ -414,6 +414,8 @@ def delete_car(car_id):
         return redirect(url_for('my_ads'))
     
     # Delete the car
+    # First remove from favorites to avoid FK error
+    db.session.execute(favorites.delete().where(favorites.c.car_id == car.id))
     db.session.delete(car)
     db.session.commit()
     flash("Ad deleted successfully!")
@@ -424,9 +426,23 @@ def delete_car(car_id):
 def delete_all_ads():
     # Delete all cars belonging to current user
     try:
-        num_deleted = Car.query.filter_by(user_id=current_user.id).delete()
-        db.session.commit()
-        flash(f"Deleted all {num_deleted} ads successfully!", "success")
+        # 1. Get IDs of cars to be deleted
+        cars_to_delete = Car.query.filter_by(user_id=current_user.id).all()
+        car_ids = [c.id for c in cars_to_delete]
+        
+        if car_ids:
+            # 2. Delete from favorites
+            db.session.execute(favorites.delete().where(favorites.c.car_id.in_(car_ids)))
+            
+            # 3. Delete cars
+            for car in cars_to_delete:
+                db.session.delete(car)
+                
+            db.session.commit()
+            flash(f"Deleted all {len(car_ids)} ads successfully!", "success")
+        else:
+            flash("No ads to delete.", "info")
+
     except Exception as e:
 
         db.session.rollback()
