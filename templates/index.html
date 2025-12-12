@@ -66,31 +66,27 @@
             <img src="{{ car.images[0] }}" alt="{{ car.brand }} {{ car.model }}"
                 onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
             <div class="card-content">
-                <div class="card-cta">
-                    <p class="price">{{ car.price }} {{ car.currency }}</p>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <a href="{{ url_for('details', id=car.id) }}" class="btn small">View</a>
-                        <!-- Favorites Logic -->
-                        {% if car.id is number %}
-                        <!-- User Car: Functional Favorite -->
-                        {% if current_user.is_authenticated %}
-                        <form action="{{ url_for('toggle_favorite', car_id=car.id) }}" method="POST"
-                            style="display:inline;">
-                            <button type="submit" class="btn small ghost"
-                                style="padding: 0.6rem 0.8rem; border-color: var(--purple-600); color: var(--purple-600);">
-                                <i class="{{ 'fa-solid' if car.id in fav_ids else 'fa-regular' }} fa-heart"></i>
-                            </button>
-                        </form>
-                        {% endif %}
-                        {% else %}
-                        <!-- Demo Car: Visual Only (Non-functional) -->
-                        <button class="btn small ghost" disabled title="Demo cars cannot be favorited"
-                            style="padding: 0.6rem 0.8rem; border-color: var(--gray-400); color: var(--gray-400); cursor: not-allowed;">
-                            <i class="fa-regular fa-heart"></i>
+                <!-- Favorites Logic - Top Right -->
+                <div class="card-like-btn">
+                    {% if car.id is number %}
+                    <!-- User Car: Functional Favorite -->
+                    {% if current_user.is_authenticated %}
+                    <form action="{{ url_for('toggle_favorite', car_id=car.id) }}" method="POST" style="display:inline;">
+                        <button type="submit" class="like-btn" title="Add to Favorites">
+                            <i class="{{ 'fa-solid' if car.id in fav_ids else 'fa-regular' }} fa-heart"></i>
                         </button>
-                        {% endif %}
-
-                    </div>
+                    </form>
+                    {% endif %}
+                    {% else %}
+                    <!-- Demo Car: Visual Only (Non-functional) -->
+                    <button class="like-btn" disabled title="Demo cars cannot be favorited">
+                        <i class="fa-regular fa-heart"></i>
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-cta">
+                    <p class="price">{{ car.price }}</p>
+                    <span class="card-curr">{{ car.currency }}</span>
                 </div>
                 <div class="title">{{ car.brand }} {{ car.model }}</div>
                 <div class="info">

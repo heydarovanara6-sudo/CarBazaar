@@ -902,6 +902,7 @@ main {
     overflow: hidden;
     box-shadow: 0 15px 35px rgba(124, 58, 237, 0.15);
     transition: all 0.4s ease;
+    position: relative;
 }
 
 .card:hover {
@@ -920,6 +921,52 @@ main {
     text-align: center;
 }
 
+.card-like-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+}
+
+.like-btn {
+    width: 34px;
+    height: 34px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px; /* slightly rounded glass pill */
+    color: #ef4444; /* red */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem; /* larger heart */
+    line-height: 1;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, color 0.18s ease;
+    box-shadow: 0 6px 18px rgba(16, 24, 40, 0.08), inset 0 1px 0 rgba(255,255,255,0.03);
+    padding: 0;
+    backdrop-filter: blur(6px) saturate(120%);
+    -webkit-backdrop-filter: blur(6px) saturate(120%);
+}
+
+.like-btn:hover:not(:disabled) {
+    transform: translateY(-3px) scale(1.06);
+    background: linear-gradient(180deg, #ef4444, #dc2626); /* red gradient on hover */
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(220, 38, 38, 0.25);
+    border-color: rgba(255,255,255,0.12);
+}
+
+.like-btn:active:not(:disabled) {
+    transform: translateY(-1px) scale(0.99);
+}
+
+.like-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: rgba(200,200,200,0.2);
+    color: var(--gray-400);
+}
+
 .card-cta {
     display: flex;
     flex-direction: column;
@@ -932,8 +979,17 @@ main {
     box-shadow: inset 0 0 0 1px rgba(124, 58, 237, 0.1);
 }
 
-.card-cta .price {
+.card-cta .price, .card-curr {
     margin: 0;
+}
+
+/* Make currency look identical to price in card headers */
+.card-curr {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--purple-600);
+    display: inline-block;
+    margin-top: 0.15rem;
 }
 
 .card-cta .btn {
@@ -943,7 +999,6 @@ main {
 
 @media (min-width: 520px) {
     .card-cta {
-        flex-direction: row;
         justify-content: space-between;
     }
 
